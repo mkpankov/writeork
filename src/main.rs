@@ -17,7 +17,6 @@ struct Elf64_Addr (u64);
 struct Elf64_Off (u64);
 
 const EI_NIDENT : usize = 16;
-const EI_CLASS : usize = 4;
 
 #[repr(C)]
 #[derive(Debug)]
@@ -46,12 +45,34 @@ impl Display for ElfEiClass {
     }
 }
 
+#[repr(u8)]
+#[derive(Debug)]
+#[allow(dead_code)]
+enum ElfEiData {
+    ELFDATANONE,
+    ELFDATA2LSB,
+    ELFDATA2MSB,
+}
+
+impl Display for ElfEiData {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        use ElfEiData::*;
+        let s = match *self {
+            ELFDATANONE => "None",
+            ELFDATA2LSB => "2's complement, little endian",
+            ELFDATA2MSB => "2's complement, big endian",
+        };
+        write!(fmt, "{}", s)
+    }
+}
+
 #[repr(C)]
 #[derive(Debug)]
 struct ElfIdentNamed {
-    padding1: [u8; 3],
+    padding1: [u8; 4],
     ei_class: ElfEiClass,
-    padding2: [u8; 12],
+    ei_data: ElfEiData,
+    padding2: [u8; 10],
 }
 
 impl Display for ElfIdent {
@@ -102,7 +123,7 @@ impl Display for Elf64_Ehdr {
                 "ELF Header:\n",
                 "  Magic:   {}\n",
                 "  Class:                             {}\n",
-                "  Data:                              {:?}\n",
+                "  Data:                              {}\n",
                 "  Version:                           {:?}\n",
                 "  OS ABI:                            {:?}\n",
                 "  ABI Version:                       {:?}\n",
@@ -122,7 +143,7 @@ impl Display for Elf64_Ehdr {
                 ),
             self.e_ident,
             ehdr_ident.ei_class,
-            "data",
+            ehdr_ident.ei_data,
             self.e_version,
             "OS ABI",
             "ABI VERSION",
