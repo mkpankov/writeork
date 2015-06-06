@@ -66,13 +66,34 @@ impl Display for ElfEiData {
     }
 }
 
+#[repr(u8)]
+#[derive(Debug)]
+#[allow(dead_code)]
+enum ElfEiVersion {
+    EV_NONE,
+    EV_CURRENT,
+}
+
+impl Display for ElfEiVersion {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        use ElfEiVersion::*;
+        let s = match *self {
+            EV_NONE => "None",
+            EV_CURRENT => "1 (current)",
+        };
+        write!(fmt, "{}", s)
+    }
+}
+
+
 #[repr(C)]
 #[derive(Debug)]
 struct ElfIdentNamed {
     padding1: [u8; 4],
     ei_class: ElfEiClass,
     ei_data: ElfEiData,
-    padding2: [u8; 10],
+    ei_version: ElfEiVersion,
+    padding2: [u8; 9],
 }
 
 impl Display for ElfIdent {
@@ -124,7 +145,7 @@ impl Display for Elf64_Ehdr {
                 "  Magic:   {}\n",
                 "  Class:                             {}\n",
                 "  Data:                              {}\n",
-                "  Version:                           {:?}\n",
+                "  Version:                           {}\n",
                 "  OS ABI:                            {:?}\n",
                 "  ABI Version:                       {:?}\n",
                 "  Type:                              {:?}\n",
@@ -144,7 +165,7 @@ impl Display for Elf64_Ehdr {
             self.e_ident,
             ehdr_ident.ei_class,
             ehdr_ident.ei_data,
-            self.e_version,
+            ehdr_ident.ei_version,
             "OS ABI",
             "ABI VERSION",
             self.e_type,
