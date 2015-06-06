@@ -89,7 +89,7 @@ impl Display for ElfEiVersion {
 #[repr(C)]
 #[derive(Debug)]
 struct ElfIdentNamed {
-    padding1: [u8; 4],
+    ei_magic: [u8; 4],
     ei_class: ElfEiClass,
     ei_data: ElfEiData,
     ei_version: ElfEiVersion,
@@ -188,11 +188,22 @@ fn work() {
     let f = File::open(std::env::args().nth(1).unwrap()).unwrap();
     let mut b = Vec::<u8>::with_capacity(std::mem::size_of::<Elf64_Ehdr>());
     f.take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
-    let ehdr: *const Elf64_Ehdr = unsafe {
+
+    let proper_magic = &[0x7f, b'E', b'L', b'F'];
+    let magic_ptr: *const [u8; 4] = unsafe {
         std::mem::transmute(b.as_ptr())
     };
-    let e: &Elf64_Ehdr = unsafe { &*ehdr };
-    println!("{}", e);
+    let magic = unsafe { &*magic_ptr };
+    if proper_magic != magic {
+        panic!("Not an ELF file");
+    }
+
+    let ehdr_ptr: *const Elf64_Ehdr = unsafe {
+        std::mem::transmute(b.as_ptr())
+    };
+    let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
+
+    println!("{}", ehdr);
 }
 
 fn _static_asserts() {
