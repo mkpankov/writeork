@@ -4,17 +4,13 @@ use std::io::prelude::*;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 
-#[derive(Debug)]
-struct Elf64_Half (u16);
+type Elf64_Half = u16;
 
-#[derive(Debug)]
-struct Elf64_Word (u32);
+type Elf64_Word = u32;
 
-#[derive(Debug)]
-struct Elf64_Addr (u64);
+type Elf64_Addr = u64;
 
-#[derive(Debug)]
-struct Elf64_Off (u64);
+type Elf64_Off = u64;
 
 const EI_NIDENT : usize = 16;
 
@@ -162,16 +158,10 @@ struct ElfIdentNamed {
 
 impl Display for ElfIdent {
     fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        for (i, b) in self.data.iter().enumerate() {
-            if i < self.data.iter().count() - 1 {
-                try!(
-                    write!(
-                        fmt, "{:02x} ", b));
-            } else {
-                try!(
-                    write!(
-                        fmt, "{:02x}", b));
-            }
+        for b in self.data.iter() {
+            try!(
+                write!(
+                    fmt, "{:02x} ", b));
         }
         Ok(())
     }
@@ -214,17 +204,17 @@ impl Display for Elf64_Ehdr {
                 "  ABI Version:                       {}\n",
                 "  Type:                              {:?}\n",
                 "  Machine:                           {:?}\n",
-                "  Version:                           {:?}\n",
-                "  Entry point address:               {:?}\n",
-                "  Start of program headers:          {:?}\n",
-                "  Start of section headers:          {:?}\n",
-                "  Flags:                             {:?}\n",
-                "  Size of this header:               {:?}\n",
-                "  Size of program headers:           {:?}\n",
-                "  Number of program headers:         {:?}\n",
-                "  Size of section headers:           {:?}\n",
-                "  Number of section headers:         {:?}\n",
-                "  Section header string table index: {:?}\n",
+                "  Version:                           {:#x}\n",
+                "  Entry point address:               {:#x}\n",
+                "  Start of program headers:          {} (bytes into file)\n",
+                "  Start of section headers:          {} (bytes into file)\n",
+                "  Flags:                             {:#x}\n",
+                "  Size of this header:               {} (bytes)\n",
+                "  Size of program headers:           {} (bytes)\n",
+                "  Number of program headers:         {}\n",
+                "  Size of section headers:           {} (bytes)\n",
+                "  Number of section headers:         {}\n",
+                "  Section header string table index: {}",
                 ),
             self.e_ident,
             ehdr_ident.ei_class,
