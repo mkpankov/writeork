@@ -135,13 +135,29 @@ impl Display for ElfEiOsAbi {
 
 #[repr(C)]
 #[derive(Debug)]
+#[allow(dead_code)]
+struct ElfEiAbiVersion {
+    data: u8,
+}
+
+impl Display for ElfEiAbiVersion {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        write!(fmt, "{}", self.data)
+    }
+}
+
+
+
+#[repr(C)]
+#[derive(Debug)]
 struct ElfIdentNamed {
     ei_magic: [u8; 4],
     ei_class: ElfEiClass,
     ei_data: ElfEiData,
     ei_version: ElfEiVersion,
     ei_osabi: ElfEiOsAbi,
-    padding2: [u8; 8],
+    ei_osabiversion: ElfEiAbiVersion,
+    padding2: [u8; 7],
 }
 
 impl Display for ElfIdent {
@@ -195,7 +211,7 @@ impl Display for Elf64_Ehdr {
                 "  Data:                              {}\n",
                 "  Version:                           {}\n",
                 "  OS/ABI:                            {}\n",
-                "  ABI Version:                       {:?}\n",
+                "  ABI Version:                       {}\n",
                 "  Type:                              {:?}\n",
                 "  Machine:                           {:?}\n",
                 "  Version:                           {:?}\n",
@@ -215,7 +231,7 @@ impl Display for Elf64_Ehdr {
             ehdr_ident.ei_data,
             ehdr_ident.ei_version,
             ehdr_ident.ei_osabi,
-            "ABI VERSION",
+            ehdr_ident.ei_osabiversion,
             self.e_type,
             self.e_machine,
             self.e_version,
