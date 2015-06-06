@@ -19,8 +19,30 @@ struct Elf64_Off (u64);
 const EI_NIDENT : usize = 16;
 
 #[derive(Debug)]
+struct ElfIdent {
+    data: [u8; EI_NIDENT],
+}
+
+impl Display for ElfIdent {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        for (i, b) in self.data.iter().enumerate() {
+            if i < self.data.iter().count() - 1 {
+                try!(
+                    write!(
+                        fmt, "{:02x} ", b));
+            } else {
+                try!(
+                    write!(
+                        fmt, "{:02x}", b));
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
 struct Elf64_Ehdr {
-    e_ident: [u8; EI_NIDENT],
+    e_ident: ElfIdent,
     e_type: Elf64_Half,
     e_machine: Elf64_Half,
     e_version: Elf64_Word,
@@ -42,7 +64,7 @@ impl Display for Elf64_Ehdr {
             fmt,
             concat!(
                 "ELF Header:\n",
-                "  Magic:   {:?}\n",
+                "  Magic:   {}\n",
                 "  Class:                             {:?}\n",
                 "  Data:                              {:?}\n",
                 "  Version:                           {:?}\n",
