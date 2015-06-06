@@ -27,6 +27,7 @@ struct ElfIdent {
 
 #[repr(u8)]
 #[derive(Debug)]
+#[allow(dead_code)]
 enum ElfEiClass {
     ELFCLASSNONE,
     ELFCLASS32,
