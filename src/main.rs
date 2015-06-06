@@ -17,10 +17,40 @@ struct Elf64_Addr (u64);
 struct Elf64_Off (u64);
 
 const EI_NIDENT : usize = 16;
+const EI_CLASS : usize = 4;
 
+#[repr(C)]
 #[derive(Debug)]
 struct ElfIdent {
     data: [u8; EI_NIDENT],
+}
+
+#[repr(u8)]
+#[derive(Debug)]
+enum ElfEiClass {
+    ELFCLASSNONE,
+    ELFCLASS32,
+    ELFCLASS64,
+}
+
+impl Display for ElfEiClass {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        use ElfEiClass::*;
+        let s = match *self {
+            ELFCLASSNONE => "None",
+            ELFCLASS32 => "ELF32",
+            ELFCLASS64 => "ELF64",
+        };
+        write!(fmt, "{}", s)
+    }
+}
+
+#[repr(C)]
+#[derive(Debug)]
+struct ElfIdentNamed {
+    padding1: [u8; 3],
+    ei_class: ElfEiClass,
+    padding2: [u8; 12],
 }
 
 impl Display for ElfIdent {
@@ -40,6 +70,7 @@ impl Display for ElfIdent {
     }
 }
 
+#[repr(C)]
 #[derive(Debug)]
 struct Elf64_Ehdr {
     e_ident: ElfIdent,
@@ -60,12 +91,16 @@ struct Elf64_Ehdr {
 
 impl Display for Elf64_Ehdr {
     fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        let ehdr_ident: &ElfIdentNamed = unsafe {
+            std::mem::transmute(&self.e_ident)
+        };
+
         write!(
             fmt,
             concat!(
                 "ELF Header:\n",
                 "  Magic:   {}\n",
-                "  Class:                             {:?}\n",
+                "  Class:                             {}\n",
                 "  Data:                              {:?}\n",
                 "  Version:                           {:?}\n",
                 "  OS ABI:                            {:?}\n",
@@ -85,7 +120,7 @@ impl Display for Elf64_Ehdr {
                 "  Section header string table index: {:?}\n",
                 ),
             self.e_ident,
-            "class",
+            ehdr_ident.ei_class,
             "data",
             self.e_version,
             "OS ABI",
@@ -117,6 +152,12 @@ fn work() {
     println!("{}", e);
 }
 
+fn check() {
+    assert_eq!(std::mem::size_of::<ElfIdent>(),
+               std::mem::size_of::<ElfIdentNamed>());
+}
+
 fn main() {
+    check();
     work();
 }
