@@ -152,12 +152,16 @@ fn work() {
     println!("{}", e);
 }
 
-fn check() {
-    assert_eq!(std::mem::size_of::<ElfIdent>(),
-               std::mem::size_of::<ElfIdentNamed>());
+fn _static_asserts() {
+    let ei_bytes: ElfIdent = unsafe {
+        std::mem::uninitialized()
+    };
+    let _ei_named: ElfIdentNamed =
+        unsafe {
+            std::mem::transmute(ei_bytes)
+        };
 }
 
 fn main() {
-    check();
     work();
 }
