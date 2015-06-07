@@ -1,5 +1,9 @@
 #![allow(non_camel_case_types)]
 
+extern crate clap;
+
+use clap::App;
+
 use std::io::prelude::*;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
@@ -495,6 +499,21 @@ fn _static_asserts() {
     };
 }
 
-fn main() {
+fn process_args_and_work() {
+    let _matches =
+        App::new("writeork")
+        .version("0.0.1")
+        .author("Michael K. Pankov <work@michaelpankov.com>")
+        .about(
+            concat!("Parse and output information from ELF files.",
+                    " Similar to readelf, but is not fully compatible."))
+        .args_from_usage(
+            "-h --file-header 'Display ELF file header'
+             <FILE> 'ELF file to parse'")
+        .get_matches();
     work();
+}
+
+fn main() {
+    process_args_and_work();
 }
