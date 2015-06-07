@@ -167,11 +167,40 @@ impl Display for ElfIdent {
     }
 }
 
+#[repr(u16)]
+#[derive(Debug,PartialEq,PartialOrd,Eq,Ord)]
+#[allow(dead_code)]
+enum ElfEhdrType {
+    ET_NONE,
+    ET_REL,
+    ET_EXEC,
+    ET_DYN,
+    ET_CORE,
+    ET_LOPROC = 0xff00,
+    ET_HIPROC = 0xffff,
+}
+
+impl Display for ElfEhdrType {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        use ElfEhdrType::*;
+        let s = match *self {
+            ET_NONE => "NONE (No file type)",
+            ET_REL => "REL (Relocatable file)",
+            ET_EXEC => "EXEC (Executable file)",
+            ET_DYN => "DYN (Shared object file)",
+            ET_CORE => "CORE (Core file)",
+            ref x if *x >= ET_LOPROC && *x <= ET_HIPROC => "Processor-specific",
+            _ => "Unknown file type",
+        };
+        write!(fmt, "{}", s)
+    }
+}
+
 #[repr(C)]
 #[derive(Debug)]
 struct Elf64_Ehdr {
     e_ident: ElfIdent,
-    e_type: Elf64_Half,
+    e_type: ElfEhdrType,
     e_machine: Elf64_Half,
     e_version: Elf64_Word,
     e_entry: Elf64_Addr,
@@ -202,7 +231,7 @@ impl Display for Elf64_Ehdr {
                 "  Version:                           {}\n",
                 "  OS/ABI:                            {}\n",
                 "  ABI Version:                       {}\n",
-                "  Type:                              {:?}\n",
+                "  Type:                              {}\n",
                 "  Machine:                           {:?}\n",
                 "  Version:                           {:#x}\n",
                 "  Entry point address:               {:#x}\n",
@@ -264,10 +293,16 @@ fn _static_asserts() {
     let ei_bytes: ElfIdent = unsafe {
         std::mem::uninitialized()
     };
-    let _ei_named: ElfIdentNamed =
-        unsafe {
-            std::mem::transmute(ei_bytes)
-        };
+    let _ei_named: ElfIdentNamed = unsafe {
+        std::mem::transmute(ei_bytes)
+    };
+
+    let ehdr_type_bytes: Elf64_Half = unsafe {
+        std::mem::uninitialized()
+    };
+    let _ehdr_type: ElfEhdrType = unsafe {
+        std::mem::transmute(ehdr_type_bytes)
+    };
 }
 
 fn main() {
