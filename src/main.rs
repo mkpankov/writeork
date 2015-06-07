@@ -454,8 +454,9 @@ impl Display for Elf64_Ehdr {
     }
 }
 
-fn work() {
-    let f = File::open(std::env::args().nth(1).unwrap()).unwrap();
+fn work(options: clap::ArgMatches) {
+    let path = options.value_of("FILE").unwrap();
+    let f = File::open(path).unwrap();
     let mut b = Vec::<u8>::with_capacity(std::mem::size_of::<Elf64_Ehdr>());
     f.take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
 
@@ -468,12 +469,14 @@ fn work() {
         panic!("Not an ELF file");
     }
 
-    let ehdr_ptr: *const Elf64_Ehdr = unsafe {
-        std::mem::transmute(b.as_ptr())
-    };
-    let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
+    if options.is_present("file-header") {
+        let ehdr_ptr: *const Elf64_Ehdr = unsafe {
+            std::mem::transmute(b.as_ptr())
+        };
+        let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
 
-    println!("{}", ehdr);
+        println!("{}", ehdr);
+    }
 }
 
 fn _static_asserts() {
@@ -500,7 +503,7 @@ fn _static_asserts() {
 }
 
 fn process_args_and_work() {
-    let _matches =
+    let options =
         App::new("writeork")
         .version("0.0.1")
         .author("Michael K. Pankov <work@michaelpankov.com>")
@@ -511,7 +514,7 @@ fn process_args_and_work() {
             "-h --file-header 'Display ELF file header'
              <FILE> 'ELF file to parse'")
         .get_matches();
-    work();
+    work(options);
 }
 
 fn main() {
