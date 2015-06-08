@@ -16,6 +16,8 @@ type Elf64_Addr = u64;
 
 type Elf64_Off = u64;
 
+type Elf64_Xword = u64;
+
 const EI_NIDENT : usize = 16;
 
 #[repr(C)]
@@ -454,11 +456,24 @@ impl Display for Elf64_Ehdr {
     }
 }
 
+#[derive(Debug)]
+#[repr(C)]
+struct Elf64_Phdr {
+    p_type: Elf64_Word,
+    p_flags: Elf64_Word,
+    p_offset: Elf64_Off,
+    p_vaddr: Elf64_Addr,
+    p_paddr: Elf64_Addr,
+    p_filesz: Elf64_Xword,
+    p_memsz: Elf64_Xword,
+    p_align: Elf64_Xword,
+}
+
 fn work(options: clap::ArgMatches) {
     let path = options.value_of("FILE").unwrap();
     let f = File::open(path).unwrap();
     let mut b = Vec::<u8>::with_capacity(std::mem::size_of::<Elf64_Ehdr>());
-    f.take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
+    (&f).take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
 
     let proper_magic = &[0x7f, b'E', b'L', b'F'];
     let magic_ptr: *const [u8; 4] = unsafe {
@@ -476,6 +491,30 @@ fn work(options: clap::ArgMatches) {
         let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
 
         println!("{}", ehdr);
+    }
+
+    if options.is_present("program-headers")
+    || options.is_present("segments") {
+        use std::io::SeekFrom;
+
+        let ehdr_ptr: *const Elf64_Ehdr = unsafe {
+            std::mem::transmute(b.as_ptr())
+        };
+        let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
+
+        let phdr_size = ehdr.e_phentsize * ehdr.e_phnum;
+        let phdr_offset = ehdr.e_phoff;
+
+        let mut b2 = Vec::<u8>::with_capacity(phdr_size as usize);
+        (&f).seek(SeekFrom::Start(phdr_offset)).unwrap();
+        (&f).take(phdr_size as u64).read_to_end(&mut b2).unwrap();
+
+        let phdr_ptr: *const Elf64_Phdr = unsafe {
+            std::mem::transmute(b2.as_ptr())
+        };
+        let phdr: &Elf64_Phdr = unsafe { &*phdr_ptr };
+
+        println!("{:?}", phdr);
     }
 }
 
@@ -511,7 +550,9 @@ fn process_args_and_work() {
             concat!("Parse and output information from ELF files.",
                     " Similar to readelf, but is not fully compatible."))
         .args_from_usage(
-            "-h --file-header 'Display ELF file header'
+            "-h --file-header     'Display ELF file header'
+             -l --program-headers 'Display the program headers'
+                --segments        'An alias for --program-headers'
              <FILE> 'ELF file to parse'")
         .get_matches();
     work(options);
