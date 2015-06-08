@@ -1,5 +1,5 @@
 [root]
-name = "relf"
+name = "writeork"
 version = "0.0.1"
 dependencies = [
  "clap 0.10.5 (registry+https://github.com/rust-lang/crates.io-index)",
