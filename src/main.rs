@@ -218,7 +218,8 @@ enum ElfEhdrMachine {
     EM_MIPS_RS3_LE,
 
     EM_PARISC = 15,
-    EM_VPP500,
+
+    EM_VPP500 = 17,
     EM_SPARC32PLUS,
     EM_960,
     EM_PPC,
@@ -405,7 +406,7 @@ struct Elf64_Ehdr {
 }
 
 trait BinaryDeserialize {
-    fn to_host(&mut self, endianness: Endianness);
+    fn to_host(&mut self, endianness: &Endianness);
 }
 
 #[allow(dead_code)]
@@ -439,19 +440,122 @@ impl FromInPlace for u64 {
     }
 }
 
-impl BinaryDeserialize for Elf64_Addr {
-    fn to_host(&mut self, endianness: Endianness) {
+impl FromInPlace for u32 {
+    fn from_be_in_place(&mut self) {
+        let size = std::mem::size_of::<u32>();
+        assert_eq!(size, 4);
+        let self_ptr: *mut [u8; 4] = unsafe {
+            std::mem::transmute(self)
+        };
+
+        for i in 0..size / 2 {
+            unsafe {
+                std::mem::swap(&mut (*self_ptr)[i],
+                               &mut (*self_ptr)[size - i - 1])
+            };
+        }
+    }
+    fn from_le_in_place(&mut self) {
+        unreachable!();
+    }
+}
+
+
+impl FromInPlace for u16 {
+    fn from_be_in_place(&mut self) {
+        let size = std::mem::size_of::<u16>();
+        assert_eq!(size, 2);
+        let self_ptr: *mut [u8; 2] = unsafe {
+            std::mem::transmute(self)
+        };
+
+        for i in 0..size / 2 {
+            unsafe {
+                std::mem::swap(&mut (*self_ptr)[i],
+                               &mut (*self_ptr)[size - i - 1])
+            };
+        }
+    }
+    fn from_le_in_place(&mut self) {
+        unreachable!();
+    }
+}
+
+
+impl BinaryDeserialize for u64 {
+    fn to_host(&mut self, endianness: &Endianness) {
         use Endianness::*;
-        match endianness {
+        match *endianness {
             BE => u64::from_be_in_place(self),
             LE => u64::from_le_in_place(self),
         };
     }
 }
 
+impl BinaryDeserialize for u32 {
+    fn to_host(&mut self, endianness: &Endianness) {
+        use Endianness::*;
+        match *endianness {
+            BE => u32::from_be_in_place(self),
+            LE => u32::from_le_in_place(self),
+        };
+    }
+}
+
+impl BinaryDeserialize for u16 {
+    fn to_host(&mut self, endianness: &Endianness) {
+        use Endianness::*;
+        match *endianness {
+            BE => u16::from_be_in_place(self),
+            LE => u16::from_le_in_place(self),
+        };
+    }
+}
+
+impl BinaryDeserialize for ElfEhdrType {
+    fn to_host(&mut self, endianness: &Endianness) {
+        use Endianness::*;
+
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        match *endianness {
+            BE => u16::from_be_in_place(self_u16),
+            LE => u16::from_le_in_place(self_u16),
+        };
+    }
+}
+
+impl BinaryDeserialize for ElfEhdrMachine {
+    fn to_host(&mut self, endianness: &Endianness) {
+        use Endianness::*;
+
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        match *endianness {
+            BE => u16::from_be_in_place(self_u16),
+            LE => u16::from_le_in_place(self_u16),
+        };
+    }
+}
+
 impl BinaryDeserialize for Elf64_Ehdr {
-    fn to_host(&mut self, endianness: Endianness) {
-        self.e_entry.to_host(endianness);
+    fn to_host(&mut self, endianness: &Endianness) {
+        let e = endianness;
+        self.e_type.to_host(e);
+        self.e_machine.to_host(e);
+        self.e_version.to_host(e);
+        self.e_entry.to_host(e);
+        self.e_phoff.to_host(e);
+        self.e_shoff.to_host(e);
+        self.e_flags.to_host(e);
+        self.e_ehsize.to_host(e);
+        self.e_phentsize.to_host(e);
+        self.e_phnum.to_host(e);
+        self.e_shentsize.to_host(e);
+        self.e_shnum.to_host(e);
+        self.e_shstrndx.to_host(e);
     }
 }
 
@@ -552,7 +656,7 @@ fn work(options: clap::ArgMatches) {
             ELFDATA2LSB => LE,
             ELFDATANONE => panic!("Unknown data format"),
         };
-        ehdr.to_host(e);
+        ehdr.to_host(&e);
 
         println!("{}", ehdr);
     }

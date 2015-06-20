@@ -1,0 +1,10 @@
+1d0
+<      Running `target/debug/writeork -h test_programs/be/a.out`
+10c9
+<   Machine:                           PowerPC 64-bit
+---
+>   Machine:                           PowerPC64
+15c14
+<   Flags:                             0x1
+---
+>   Flags:                             0x1, abiv1
