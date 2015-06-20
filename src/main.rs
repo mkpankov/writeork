@@ -404,6 +404,54 @@ struct Elf64_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
+trait BinaryDeserialize {
+    fn to_host(&mut self, endianness: Endianness);
+}
+
+#[allow(dead_code)]
+enum Endianness {
+    LE,
+    BE,
+}
+
+trait FromInPlace {
+    fn from_be_in_place(&mut self);
+    fn from_le_in_place(&mut self);
+}
+
+impl FromInPlace for u64 {
+    fn from_be_in_place(&mut self) {
+        let size = std::mem::size_of::<u64>();
+        assert_eq!(size, 8);
+        let self_ptr: *mut [u8; 8] = unsafe {
+            std::mem::transmute(self)
+        };
+        unsafe { std::mem::swap(&mut (*self_ptr)[0], &mut (*self_ptr)[7]) };
+        unsafe { std::mem::swap(&mut (*self_ptr)[1], &mut (*self_ptr)[6]) };
+        unsafe { std::mem::swap(&mut (*self_ptr)[2], &mut (*self_ptr)[5]) };
+        unsafe { std::mem::swap(&mut (*self_ptr)[3], &mut (*self_ptr)[4]) };
+    }
+    fn from_le_in_place(&mut self) {
+        unreachable!();
+    }
+}
+
+impl BinaryDeserialize for Elf64_Addr {
+    fn to_host(&mut self, endianness: Endianness) {
+        use Endianness::*;
+        match endianness {
+            BE => u64::from_be_in_place(self),
+            LE => u64::from_le_in_place(self),
+        };
+    }
+}
+
+impl BinaryDeserialize for Elf64_Ehdr {
+    fn to_host(&mut self, endianness: Endianness) {
+        self.e_entry.to_host(endianness);
+    }
+}
+
 impl Display for Elf64_Ehdr {
     fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
         let ehdr_ident: &ElfIdentNamed = unsafe {
@@ -485,10 +533,23 @@ fn work(options: clap::ArgMatches) {
     }
 
     if options.is_present("file-header") {
-        let ehdr_ptr: *const Elf64_Ehdr = unsafe {
+        use ElfEiData::*;
+        use Endianness::*;
+
+        let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
             std::mem::transmute(b.as_ptr())
         };
-        let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
+        let mut ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
+        let ehdr_ident: &ElfIdentNamed = unsafe {
+            std::mem::transmute(&ehdr.e_ident)
+        };
+
+        let e = match ehdr_ident.ei_data {
+            ELFDATA2MSB => BE,
+            ELFDATA2LSB => LE,
+            ELFDATANONE => panic!("Unknown data format"),
+        };
+        ehdr.to_host(e);
 
         println!("{}", ehdr);
     }
