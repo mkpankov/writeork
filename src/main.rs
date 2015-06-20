@@ -426,10 +426,13 @@ impl FromInPlace for u64 {
         let self_ptr: *mut [u8; 8] = unsafe {
             std::mem::transmute(self)
         };
-        unsafe { std::mem::swap(&mut (*self_ptr)[0], &mut (*self_ptr)[7]) };
-        unsafe { std::mem::swap(&mut (*self_ptr)[1], &mut (*self_ptr)[6]) };
-        unsafe { std::mem::swap(&mut (*self_ptr)[2], &mut (*self_ptr)[5]) };
-        unsafe { std::mem::swap(&mut (*self_ptr)[3], &mut (*self_ptr)[4]) };
+
+        for i in 0..size / 2 {
+            unsafe {
+                std::mem::swap(&mut (*self_ptr)[i],
+                               &mut (*self_ptr)[size - i - 1])
+            };
+        }
     }
     fn from_le_in_place(&mut self) {
         unreachable!();
