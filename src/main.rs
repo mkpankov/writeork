@@ -514,29 +514,19 @@ impl BinaryDeserialize for u16 {
 
 impl BinaryDeserialize for ElfEhdrType {
     fn to_host(&mut self, endianness: &Endianness) {
-        use Endianness::*;
-
         let self_u16: &mut u16 = unsafe {
             std::mem::transmute(self)
         };
-        match *endianness {
-            BE => u16::from_be_in_place(self_u16),
-            LE => u16::from_le_in_place(self_u16),
-        };
+        self_u16.to_host(endianness);
     }
 }
 
 impl BinaryDeserialize for ElfEhdrMachine {
     fn to_host(&mut self, endianness: &Endianness) {
-        use Endianness::*;
-
         let self_u16: &mut u16 = unsafe {
             std::mem::transmute(self)
         };
-        match *endianness {
-            BE => u16::from_be_in_place(self_u16),
-            LE => u16::from_le_in_place(self_u16),
-        };
+        self_u16.to_host(endianness);
     }
 }
 
