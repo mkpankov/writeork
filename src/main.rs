@@ -405,8 +405,19 @@ struct Elf64_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
-trait BinaryDeserialize {
-    fn to_host(&mut self, endianness: &Endianness);
+trait BinaryDeserialize: FromInPlace {
+    fn to_host(&mut self, endianness: &Endianness) {
+        use Endianness::*;
+
+        match *endianness {
+            BE => if cfg!(target_endian = "little") {
+                FromInPlace::from_be_in_place(self)
+            },
+            LE => if cfg!(target_endian = "big") {
+                FromInPlace::from_le_in_place(self)
+            }
+        }
+    }
 }
 
 #[allow(dead_code)]
@@ -482,48 +493,11 @@ impl FromInPlace for u16 {
 }
 
 
-impl BinaryDeserialize for u64 {
-    fn to_host(&mut self, endianness: &Endianness) {
-        use Endianness::*;
+impl BinaryDeserialize for u64 { }
 
-        match *endianness {
-            BE => if cfg!(target_endian = "little") {
-                FromInPlace::from_be_in_place(self)
-            },
-            LE => if cfg!(target_endian = "big") {
-                FromInPlace::from_le_in_place(self)
-            }
-        }
-    }
-}
+impl BinaryDeserialize for u32 { }
 
-impl BinaryDeserialize for u32 {
-    fn to_host(&mut self, endianness: &Endianness) {
-        use Endianness::*;
-        match *endianness {
-            BE => if cfg!(target_endian = "little") {
-                FromInPlace::from_be_in_place(self)
-            },
-            LE => if cfg!(target_endian = "big") {
-                FromInPlace::from_le_in_place(self)
-            },
-        };
-    }
-}
-
-impl BinaryDeserialize for u16 {
-    fn to_host(&mut self, endianness: &Endianness) {
-        use Endianness::*;
-        match *endianness {
-            BE => if cfg!(target_endian = "little") {
-                FromInPlace::from_be_in_place(self)
-            },
-            LE => if cfg!(target_endian = "big") {
-                FromInPlace::from_le_in_place(self)
-            },
-        };
-    }
-}
+impl BinaryDeserialize for u16 { }
 
 impl BinaryDeserialize for ElfEhdrType {
     fn to_host(&mut self, endianness: &Endianness) {
