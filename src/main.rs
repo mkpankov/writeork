@@ -405,7 +405,7 @@ struct Elf64_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
-trait BinaryDeserialize: FromInPlace {
+trait BinaryDeserializePrimitive: FromInPlace {
     fn to_host(&mut self, endianness: &Endianness) {
         use Endianness::*;
 
@@ -418,6 +418,10 @@ trait BinaryDeserialize: FromInPlace {
             }
         }
     }
+}
+
+trait BinaryDeserialize {
+    fn to_host(&mut self, endianness: &Endianness);
 }
 
 #[allow(dead_code)]
@@ -517,13 +521,13 @@ impl FromInPlace for ElfEhdrMachine {
 }
 
 
-impl BinaryDeserialize for u64 { }
+impl BinaryDeserializePrimitive for u64 { }
 
-impl BinaryDeserialize for u32 { }
+impl BinaryDeserializePrimitive for u32 { }
 
-impl BinaryDeserialize for u16 { }
+impl BinaryDeserializePrimitive for u16 { }
 
-impl BinaryDeserialize for ElfEhdrType {
+impl BinaryDeserializePrimitive for ElfEhdrType {
     fn to_host(&mut self, endianness: &Endianness) {
         let self_u16: &mut u16 = unsafe {
             std::mem::transmute(self)
@@ -532,7 +536,7 @@ impl BinaryDeserialize for ElfEhdrType {
     }
 }
 
-impl BinaryDeserialize for ElfEhdrMachine {
+impl BinaryDeserializePrimitive for ElfEhdrMachine {
     fn to_host(&mut self, endianness: &Endianness) {
         let self_u16: &mut u16 = unsafe {
             std::mem::transmute(self)
