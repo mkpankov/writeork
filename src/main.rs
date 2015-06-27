@@ -485,10 +485,15 @@ impl FromInPlace for u16 {
 impl BinaryDeserialize for u64 {
     fn to_host(&mut self, endianness: &Endianness) {
         use Endianness::*;
+
         match *endianness {
-            BE => u64::from_be_in_place(self),
-            LE => u64::from_le_in_place(self),
-        };
+            BE => if cfg!(target_endian = "little") {
+                u64::from_be_in_place(self)
+            },
+            LE => if cfg!(target_endian = "big") {
+                u64::from_le_in_place(self)
+            }
+        }
     }
 }
 
@@ -496,8 +501,12 @@ impl BinaryDeserialize for u32 {
     fn to_host(&mut self, endianness: &Endianness) {
         use Endianness::*;
         match *endianness {
-            BE => u32::from_be_in_place(self),
-            LE => u32::from_le_in_place(self),
+            BE => if cfg!(target_endian = "little") {
+                u32::from_be_in_place(self)
+            },
+            LE => if cfg!(target_endian = "big") {
+                u32::from_le_in_place(self)
+            },
         };
     }
 }
@@ -506,8 +515,12 @@ impl BinaryDeserialize for u16 {
     fn to_host(&mut self, endianness: &Endianness) {
         use Endianness::*;
         match *endianness {
-            BE => u16::from_be_in_place(self),
-            LE => u16::from_le_in_place(self),
+            BE => if cfg!(target_endian = "little") {
+                u16::from_be_in_place(self)
+            },
+            LE => if cfg!(target_endian = "big") {
+                u16::from_le_in_place(self)
+            },
         };
     }
 }
