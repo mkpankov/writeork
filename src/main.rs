@@ -492,6 +492,30 @@ impl FromInPlace for u16 {
     }
 }
 
+impl FromInPlace for ElfEhdrType {
+    fn from_be_in_place(&mut self) {
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        self_u16.from_be_in_place();
+    }
+    fn from_le_in_place(&mut self) {
+        unreachable!();
+    }
+}
+
+impl FromInPlace for ElfEhdrMachine {
+    fn from_be_in_place(&mut self) {
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        self_u16.from_be_in_place();
+    }
+    fn from_le_in_place(&mut self) {
+        unreachable!();
+    }
+}
+
 
 impl BinaryDeserialize for u64 { }
 
