@@ -488,10 +488,10 @@ impl BinaryDeserialize for u64 {
 
         match *endianness {
             BE => if cfg!(target_endian = "little") {
-                u64::from_be_in_place(self)
+                FromInPlace::from_be_in_place(self)
             },
             LE => if cfg!(target_endian = "big") {
-                u64::from_le_in_place(self)
+                FromInPlace::from_le_in_place(self)
             }
         }
     }
@@ -502,10 +502,10 @@ impl BinaryDeserialize for u32 {
         use Endianness::*;
         match *endianness {
             BE => if cfg!(target_endian = "little") {
-                u32::from_be_in_place(self)
+                FromInPlace::from_be_in_place(self)
             },
             LE => if cfg!(target_endian = "big") {
-                u32::from_le_in_place(self)
+                FromInPlace::from_le_in_place(self)
             },
         };
     }
@@ -516,10 +516,10 @@ impl BinaryDeserialize for u16 {
         use Endianness::*;
         match *endianness {
             BE => if cfg!(target_endian = "little") {
-                u16::from_be_in_place(self)
+                FromInPlace::from_be_in_place(self)
             },
             LE => if cfg!(target_endian = "big") {
-                u16::from_le_in_place(self)
+                FromInPlace::from_le_in_place(self)
             },
         };
     }
