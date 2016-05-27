@@ -5,7 +5,7 @@ extern crate clap;
 #[macro_use]
 mod to_host;
 
-use to_host::{Endianness, ToHost};
+use to_host::{Endianness, ToHostInPlaceStruct, ToHostCopyStruct};
 use to_host::swap_in_place::SwapInPlace;
 use to_host::swap_copy::SwapCopy;
 use to_host::to_host_in_place::ToHostInPlace;
@@ -396,7 +396,7 @@ impl Display for ElfEhdrMachine {
 
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Elf64_Ehdr {
     e_ident: ElfIdent,
     e_type: ElfEhdrType,
@@ -648,7 +648,7 @@ swap_copy_wrapper!(ElfEhdrMachine, u16);
 to_host_copy_wrapper!(ElfEhdrType, u16);
 to_host_copy_wrapper!(ElfEhdrMachine, u16);
 
-impl ToHost for Elf64_Ehdr {
+impl ToHostInPlaceStruct for Elf64_Ehdr {
     fn to_host_in_place(&mut self, endianness: &Endianness) {
         let e = endianness;
         self.e_type.to_host_in_place(e);
@@ -665,6 +665,9 @@ impl ToHost for Elf64_Ehdr {
         self.e_shnum.to_host_in_place(e);
         self.e_shstrndx.to_host_in_place(e);
     }
+}
+
+impl ToHostCopyStruct for Elf64_Ehdr {
     fn to_host_copy(&self, endianness: &Endianness) -> Self {
         let e = endianness;
         Elf64_Ehdr {

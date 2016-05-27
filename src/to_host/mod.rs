@@ -14,7 +14,10 @@ pub enum Endianness {
     BE,
 }
 
-pub trait ToHost {
+pub trait ToHostInPlaceStruct {
     fn to_host_in_place(&mut self, endianness: &Endianness);
+}
+
+pub trait ToHostCopyStruct {
     fn to_host_copy(&self, endianness: &Endianness) -> Self;
 }
