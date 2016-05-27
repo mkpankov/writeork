@@ -28,3 +28,20 @@ macro_rules! swap_copy {
 swap_copy!(u64, 8);
 swap_copy!(u32, 4);
 swap_copy!(u16, 2);
+
+#[macro_export]
+macro_rules! swap_copy_wrapper {
+    ( $wrapper:ty, $t:ty ) => {
+        impl SwapCopy for $wrapper {
+            fn swap_copy(&self) -> Self {
+                let self_: &$t = unsafe {
+                    std::mem::transmute(self)
+                };
+                let result_ = self_.swap_copy();
+                unsafe {
+                    std::mem::transmute(result_)
+                }
+            }
+        }
+    }
+}

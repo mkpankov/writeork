@@ -26,3 +26,17 @@ macro_rules! swap_in_place {
 swap_in_place!(u64, 8);
 swap_in_place!(u32, 4);
 swap_in_place!(u16, 2);
+
+#[macro_export]
+macro_rules! swap_in_place_wrapper {
+    ( $wrapper:ty, $t:ty ) => {
+        impl SwapInPlace for $wrapper {
+            fn swap_in_place(&mut self) {
+                let self_: &mut $t = unsafe {
+                    std::mem::transmute(self)
+                };
+                self_.swap_in_place();
+            }
+        }
+    }
+}

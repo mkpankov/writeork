@@ -21,3 +21,17 @@ impl ToHostInPlace for u64 { }
 impl ToHostInPlace for u32 { }
 
 impl ToHostInPlace for u16 { }
+
+#[macro_export]
+macro_rules! to_host_in_place_wrapper {
+    ( $wrapper:ty, $t:ty ) => {
+        impl ToHostInPlace for $wrapper {
+            fn to_host_in_place(&mut self, endianness: &Endianness) {
+                let self_: &mut $t = unsafe {
+                    std::mem::transmute(self)
+                };
+                self_.to_host_in_place(endianness);
+            }
+        }
+    }
+}

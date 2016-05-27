@@ -25,3 +25,20 @@ impl ToHostCopy for u64 { }
 impl ToHostCopy for u32 { }
 
 impl ToHostCopy for u16 { }
+
+#[macro_export]
+macro_rules! to_host_copy_wrapper {
+    ( $wrapper:ty, $t:ty ) => {
+        impl ToHostCopy for $wrapper {
+            fn to_host_copy(&self, endianness: &Endianness) -> Self {
+                let self_: &$t = unsafe {
+                    std::mem::transmute(self)
+                };
+                let result_ = self_.to_host_copy(endianness);
+                unsafe {
+                    std::mem::transmute(result_)
+                }
+            }
+        }
+    }
+}

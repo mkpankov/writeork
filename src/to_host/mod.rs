@@ -1,6 +1,10 @@
+#[macro_use]
 pub mod swap_copy;
+#[macro_use]
 pub mod swap_in_place;
+#[macro_use]
 pub mod to_host_in_place;
+#[macro_use]
 pub mod to_host_copy;
 
 #[allow(dead_code)]

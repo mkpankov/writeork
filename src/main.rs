@@ -2,6 +2,7 @@
 
 extern crate clap;
 
+#[macro_use]
 mod to_host;
 
 use to_host::{Endianness, ToHost};
@@ -637,90 +638,15 @@ fn main() {
     process_args_and_work();
 }
 
-impl SwapInPlace for ElfEhdrType {
-    fn swap_in_place(&mut self) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.swap_in_place();
-    }
-}
+swap_in_place_wrapper!(ElfEhdrType, u16);
+swap_in_place_wrapper!(ElfEhdrMachine, u16);
+to_host_in_place_wrapper!(ElfEhdrType, u16);
+to_host_in_place_wrapper!(ElfEhdrMachine, u16);
 
-impl SwapInPlace for ElfEhdrMachine {
-    fn swap_in_place(&mut self) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.swap_in_place();
-    }
-}
-
-impl ToHostInPlace for ElfEhdrType {
-    fn to_host_in_place(&mut self, endianness: &Endianness) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.to_host_in_place(endianness);
-    }
-}
-
-impl ToHostInPlace for ElfEhdrMachine {
-    fn to_host_in_place(&mut self, endianness: &Endianness) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.to_host_in_place(endianness);
-    }
-}
-
-impl SwapCopy for ElfEhdrType {
-    fn swap_copy(&self) -> Self {
-        let self_u16: &u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        let result_u16 = self_u16.swap_copy();
-        unsafe {
-            std::mem::transmute(result_u16)
-        }
-    }
-}
-
-impl SwapCopy for ElfEhdrMachine {
-    fn swap_copy(&self) -> Self {
-        let self_u16: &u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        let result_u16 = self_u16.swap_copy();
-        unsafe {
-            std::mem::transmute(result_u16)
-        }
-    }
-}
-
-impl ToHostCopy for ElfEhdrType {
-    fn to_host_copy(&self, endianness: &Endianness) -> Self {
-        let self_u16: &u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        let result_u16 = self_u16.to_host_copy(endianness);
-        unsafe {
-            std::mem::transmute(result_u16)
-        }
-    }
-}
-
-impl ToHostCopy for ElfEhdrMachine {
-    fn to_host_copy(&self, endianness: &Endianness) -> Self {
-        let self_u16: &u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        let result_u16 = self_u16.to_host_copy(endianness);
-        unsafe {
-            std::mem::transmute(result_u16)
-        }
-    }
-}
-
+swap_copy_wrapper!(ElfEhdrType, u16);
+swap_copy_wrapper!(ElfEhdrMachine, u16);
+to_host_copy_wrapper!(ElfEhdrType, u16);
+to_host_copy_wrapper!(ElfEhdrMachine, u16);
 
 impl ToHost for Elf64_Ehdr {
     fn to_host_in_place(&mut self, endianness: &Endianness) {
