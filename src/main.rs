@@ -414,15 +414,16 @@ struct Elf64_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
-impl Elf64_Ehdr {
-    fn convert_and_print(&self, e: Endianness) {
-        use to_host::to_host_copy::ToHostCopy;
-
+impl Display for Elf64_Ehdr {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
         let ehdr_ident: &ElfIdentNamed = unsafe {
             std::mem::transmute(&self.e_ident)
         };
 
-        print!(
+        let e = self.get_endianness();
+
+        write!(
+            fmt,
             concat!(
                 "ELF Header:\n",
                 "  Magic:   {}\n",
@@ -463,59 +464,7 @@ impl Elf64_Ehdr {
             self.e_phnum.to_host_copy(&e),
             self.e_shentsize.to_host_copy(&e),
             self.e_shnum.to_host_copy(&e),
-            self.e_shstrndx.to_host_copy(&e));
-    }
-}
-
-impl Display for Elf64_Ehdr {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        let ehdr_ident: &ElfIdentNamed = unsafe {
-            std::mem::transmute(&self.e_ident)
-        };
-
-        write!(
-            fmt,
-            concat!(
-                "ELF Header:\n",
-                "  Magic:   {}\n",
-                "  Class:                             {}\n",
-                "  Data:                              {}\n",
-                "  Version:                           {}\n",
-                "  OS/ABI:                            {}\n",
-                "  ABI Version:                       {}\n",
-                "  Type:                              {}\n",
-                "  Machine:                           {}\n",
-                "  Version:                           {:#x}\n",
-                "  Entry point address:               {:#x}\n",
-                "  Start of program headers:          {} (bytes into file)\n",
-                "  Start of section headers:          {} (bytes into file)\n",
-                "  Flags:                             {:#x}\n",
-                "  Size of this header:               {} (bytes)\n",
-                "  Size of program headers:           {} (bytes)\n",
-                "  Number of program headers:         {}\n",
-                "  Size of section headers:           {} (bytes)\n",
-                "  Number of section headers:         {}\n",
-                "  Section header string table index: {}",
-                ),
-            self.e_ident,
-            ehdr_ident.ei_class,
-            ehdr_ident.ei_data,
-            ehdr_ident.ei_version,
-            ehdr_ident.ei_osabi,
-            ehdr_ident.ei_osabiversion,
-            self.e_type,
-            self.e_machine,
-            self.e_version,
-            self.e_entry,
-            self.e_phoff,
-            self.e_shoff,
-            self.e_flags,
-            self.e_ehsize,
-            self.e_phentsize,
-            self.e_phnum,
-            self.e_shentsize,
-            self.e_shnum,
-            self.e_shstrndx)
+            self.e_shstrndx.to_host_copy(&e))
     }
 }
 
@@ -530,6 +479,27 @@ struct Elf64_Phdr {
     p_filesz: Elf64_Xword,
     p_memsz: Elf64_Xword,
     p_align: Elf64_Xword,
+}
+
+impl Elf64_Ehdr {
+    fn get_endianness(&self) -> Endianness {
+        use ElfEiData::*;
+        use to_host::Endianness::*;
+
+        let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
+            std::mem::transmute(self)
+        };
+        let ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
+        let ehdr_ident: &ElfIdentNamed = unsafe {
+            std::mem::transmute(&ehdr.e_ident)
+        };
+
+        match ehdr_ident.ei_data {
+            ELFDATA2MSB => BE,
+            ELFDATA2LSB => LE,
+            ELFDATANONE => panic!("Unknown data format"),
+        }
+    }
 }
 
 fn work(options: clap::ArgMatches) {
@@ -549,24 +519,12 @@ fn work(options: clap::ArgMatches) {
     }
 
     if options.is_present("file-header") {
-        use ElfEiData::*;
-        use to_host::Endianness::*;
-
         let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
             std::mem::transmute(b.as_ptr())
         };
         let ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
-        let ehdr_ident: &ElfIdentNamed = unsafe {
-            std::mem::transmute(&ehdr.e_ident)
-        };
 
-        let e = match ehdr_ident.ei_data {
-            ELFDATA2MSB => BE,
-            ELFDATA2LSB => LE,
-            ELFDATANONE => panic!("Unknown data format"),
-        };
-
-        ehdr.convert_and_print(e);
+        print!("{}", ehdr);
     }
 
     if options.is_present("program-headers")
