@@ -2,6 +2,14 @@
 
 extern crate clap;
 
+mod to_host;
+
+use to_host::{Endianness, ToHost};
+use to_host::swap_in_place::SwapInPlace;
+use to_host::swap_copy::SwapCopy;
+use to_host::to_host_in_place::ToHostInPlace;
+use to_host::to_host_copy::ToHostCopy;
+
 use clap::App;
 
 use std::io::prelude::*;
@@ -21,7 +29,7 @@ type Elf64_Xword = u64;
 const EI_NIDENT : usize = 16;
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 struct ElfIdent {
     data: [u8; EI_NIDENT],
 }
@@ -174,7 +182,7 @@ impl Display for ElfIdent {
 }
 
 #[repr(u16)]
-#[derive(Debug,PartialEq,PartialOrd,Eq,Ord)]
+#[derive(Debug,PartialEq,PartialOrd,Eq,Ord,Clone,Copy)]
 #[allow(dead_code)]
 enum ElfEhdrType {
     ET_NONE,
@@ -203,7 +211,7 @@ impl Display for ElfEhdrType {
 }
 
 #[repr(u16)]
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 #[allow(dead_code)]
 enum ElfEhdrMachine {
     EM_NONE,
@@ -405,162 +413,56 @@ struct Elf64_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
-trait BinaryDeserializePrimitive: FromInPlace {
-    fn to_host(&mut self, endianness: &Endianness) {
-        use Endianness::*;
+impl Elf64_Ehdr {
+    fn convert_and_print(&self, e: Endianness) {
+        use to_host::to_host_copy::ToHostCopy;
 
-        match *endianness {
-            BE => if cfg!(target_endian = "little") {
-                FromInPlace::from_be_in_place(self)
-            },
-            LE => if cfg!(target_endian = "big") {
-                FromInPlace::from_le_in_place(self)
-            }
-        }
-    }
-}
-
-trait BinaryDeserialize {
-    fn to_host(&mut self, endianness: &Endianness);
-}
-
-#[allow(dead_code)]
-enum Endianness {
-    LE,
-    BE,
-}
-
-trait FromInPlace {
-    fn from_be_in_place(&mut self);
-    fn from_le_in_place(&mut self);
-}
-
-impl FromInPlace for u64 {
-    fn from_be_in_place(&mut self) {
-        let size = std::mem::size_of::<u64>();
-        assert_eq!(size, 8);
-        let self_ptr: *mut [u8; 8] = unsafe {
-            std::mem::transmute(self)
+        let ehdr_ident: &ElfIdentNamed = unsafe {
+            std::mem::transmute(&self.e_ident)
         };
 
-        for i in 0..size / 2 {
-            unsafe {
-                std::mem::swap(&mut (*self_ptr)[i],
-                               &mut (*self_ptr)[size - i - 1])
-            };
-        }
-    }
-    fn from_le_in_place(&mut self) {
-        unreachable!();
-    }
-}
-
-impl FromInPlace for u32 {
-    fn from_be_in_place(&mut self) {
-        let size = std::mem::size_of::<u32>();
-        assert_eq!(size, 4);
-        let self_ptr: *mut [u8; 4] = unsafe {
-            std::mem::transmute(self)
-        };
-
-        for i in 0..size / 2 {
-            unsafe {
-                std::mem::swap(&mut (*self_ptr)[i],
-                               &mut (*self_ptr)[size - i - 1])
-            };
-        }
-    }
-    fn from_le_in_place(&mut self) {
-        unreachable!();
-    }
-}
-
-
-impl FromInPlace for u16 {
-    fn from_be_in_place(&mut self) {
-        let size = std::mem::size_of::<u16>();
-        assert_eq!(size, 2);
-        let self_ptr: *mut [u8; 2] = unsafe {
-            std::mem::transmute(self)
-        };
-
-        for i in 0..size / 2 {
-            unsafe {
-                std::mem::swap(&mut (*self_ptr)[i],
-                               &mut (*self_ptr)[size - i - 1])
-            };
-        }
-    }
-    fn from_le_in_place(&mut self) {
-        unreachable!();
-    }
-}
-
-impl FromInPlace for ElfEhdrType {
-    fn from_be_in_place(&mut self) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.from_be_in_place();
-    }
-    fn from_le_in_place(&mut self) {
-        unreachable!();
-    }
-}
-
-impl FromInPlace for ElfEhdrMachine {
-    fn from_be_in_place(&mut self) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.from_be_in_place();
-    }
-    fn from_le_in_place(&mut self) {
-        unreachable!();
-    }
-}
-
-
-impl BinaryDeserializePrimitive for u64 { }
-
-impl BinaryDeserializePrimitive for u32 { }
-
-impl BinaryDeserializePrimitive for u16 { }
-
-impl BinaryDeserializePrimitive for ElfEhdrType {
-    fn to_host(&mut self, endianness: &Endianness) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.to_host(endianness);
-    }
-}
-
-impl BinaryDeserializePrimitive for ElfEhdrMachine {
-    fn to_host(&mut self, endianness: &Endianness) {
-        let self_u16: &mut u16 = unsafe {
-            std::mem::transmute(self)
-        };
-        self_u16.to_host(endianness);
-    }
-}
-
-impl BinaryDeserialize for Elf64_Ehdr {
-    fn to_host(&mut self, endianness: &Endianness) {
-        let e = endianness;
-        self.e_type.to_host(e);
-        self.e_machine.to_host(e);
-        self.e_version.to_host(e);
-        self.e_entry.to_host(e);
-        self.e_phoff.to_host(e);
-        self.e_shoff.to_host(e);
-        self.e_flags.to_host(e);
-        self.e_ehsize.to_host(e);
-        self.e_phentsize.to_host(e);
-        self.e_phnum.to_host(e);
-        self.e_shentsize.to_host(e);
-        self.e_shnum.to_host(e);
-        self.e_shstrndx.to_host(e);
+        print!(
+            concat!(
+                "ELF Header:\n",
+                "  Magic:   {}\n",
+                "  Class:                             {}\n",
+                "  Data:                              {}\n",
+                "  Version:                           {}\n",
+                "  OS/ABI:                            {}\n",
+                "  ABI Version:                       {}\n",
+                "  Type:                              {}\n",
+                "  Machine:                           {}\n",
+                "  Version:                           {:#x}\n",
+                "  Entry point address:               {:#x}\n",
+                "  Start of program headers:          {} (bytes into file)\n",
+                "  Start of section headers:          {} (bytes into file)\n",
+                "  Flags:                             {:#x}\n",
+                "  Size of this header:               {} (bytes)\n",
+                "  Size of program headers:           {} (bytes)\n",
+                "  Number of program headers:         {}\n",
+                "  Size of section headers:           {} (bytes)\n",
+                "  Number of section headers:         {}\n",
+                "  Section header string table index: {}\n",
+                ),
+            self.e_ident,
+            ehdr_ident.ei_class,
+            ehdr_ident.ei_data,
+            ehdr_ident.ei_version,
+            ehdr_ident.ei_osabi,
+            ehdr_ident.ei_osabiversion,
+            self.e_type.to_host_copy(&e),
+            self.e_machine.to_host_copy(&e),
+            self.e_version.to_host_copy(&e),
+            self.e_entry.to_host_copy(&e),
+            self.e_phoff.to_host_copy(&e),
+            self.e_shoff.to_host_copy(&e),
+            self.e_flags.to_host_copy(&e),
+            self.e_ehsize.to_host_copy(&e),
+            self.e_phentsize.to_host_copy(&e),
+            self.e_phnum.to_host_copy(&e),
+            self.e_shentsize.to_host_copy(&e),
+            self.e_shnum.to_host_copy(&e),
+            self.e_shstrndx.to_host_copy(&e));
     }
 }
 
@@ -633,6 +535,7 @@ fn work(options: clap::ArgMatches) {
     let path = options.value_of("FILE").unwrap();
     let f = File::open(path).unwrap();
     let mut b = Vec::<u8>::with_capacity(std::mem::size_of::<Elf64_Ehdr>());
+
     (&f).take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
 
     let proper_magic = &[0x7f, b'E', b'L', b'F'];
@@ -646,12 +549,12 @@ fn work(options: clap::ArgMatches) {
 
     if options.is_present("file-header") {
         use ElfEiData::*;
-        use Endianness::*;
+        use to_host::Endianness::*;
 
         let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
             std::mem::transmute(b.as_ptr())
         };
-        let mut ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
+        let ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
         let ehdr_ident: &ElfIdentNamed = unsafe {
             std::mem::transmute(&ehdr.e_ident)
         };
@@ -661,9 +564,8 @@ fn work(options: clap::ArgMatches) {
             ELFDATA2LSB => LE,
             ELFDATANONE => panic!("Unknown data format"),
         };
-        ehdr.to_host(&e);
 
-        println!("{}", ehdr);
+        ehdr.convert_and_print(e);
     }
 
     if options.is_present("program-headers")
@@ -733,4 +635,127 @@ fn process_args_and_work() {
 
 fn main() {
     process_args_and_work();
+}
+
+impl SwapInPlace for ElfEhdrType {
+    fn swap_in_place(&mut self) {
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        self_u16.swap_in_place();
+    }
+}
+
+impl SwapInPlace for ElfEhdrMachine {
+    fn swap_in_place(&mut self) {
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        self_u16.swap_in_place();
+    }
+}
+
+impl ToHostInPlace for ElfEhdrType {
+    fn to_host_in_place(&mut self, endianness: &Endianness) {
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        self_u16.to_host_in_place(endianness);
+    }
+}
+
+impl ToHostInPlace for ElfEhdrMachine {
+    fn to_host_in_place(&mut self, endianness: &Endianness) {
+        let self_u16: &mut u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        self_u16.to_host_in_place(endianness);
+    }
+}
+
+impl SwapCopy for ElfEhdrType {
+    fn swap_copy(&self) -> Self {
+        let self_u16: &u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        let result_u16 = self_u16.swap_copy();
+        unsafe {
+            std::mem::transmute(result_u16)
+        }
+    }
+}
+
+impl SwapCopy for ElfEhdrMachine {
+    fn swap_copy(&self) -> Self {
+        let self_u16: &u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        let result_u16 = self_u16.swap_copy();
+        unsafe {
+            std::mem::transmute(result_u16)
+        }
+    }
+}
+
+impl ToHostCopy for ElfEhdrType {
+    fn to_host_copy(&self, endianness: &Endianness) -> Self {
+        let self_u16: &u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        let result_u16 = self_u16.to_host_copy(endianness);
+        unsafe {
+            std::mem::transmute(result_u16)
+        }
+    }
+}
+
+impl ToHostCopy for ElfEhdrMachine {
+    fn to_host_copy(&self, endianness: &Endianness) -> Self {
+        let self_u16: &u16 = unsafe {
+            std::mem::transmute(self)
+        };
+        let result_u16 = self_u16.to_host_copy(endianness);
+        unsafe {
+            std::mem::transmute(result_u16)
+        }
+    }
+}
+
+
+impl ToHost for Elf64_Ehdr {
+    fn to_host_in_place(&mut self, endianness: &Endianness) {
+        let e = endianness;
+        self.e_type.to_host_in_place(e);
+        self.e_machine.to_host_in_place(e);
+        self.e_version.to_host_in_place(e);
+        self.e_entry.to_host_in_place(e);
+        self.e_phoff.to_host_in_place(e);
+        self.e_shoff.to_host_in_place(e);
+        self.e_flags.to_host_in_place(e);
+        self.e_ehsize.to_host_in_place(e);
+        self.e_phentsize.to_host_in_place(e);
+        self.e_phnum.to_host_in_place(e);
+        self.e_shentsize.to_host_in_place(e);
+        self.e_shnum.to_host_in_place(e);
+        self.e_shstrndx.to_host_in_place(e);
+    }
+    fn to_host_copy(&self, endianness: &Endianness) -> Self {
+        let e = endianness;
+        Elf64_Ehdr {
+            e_ident: self.e_ident,
+            e_type: self.e_type.to_host_copy(e),
+            e_machine: self.e_machine.to_host_copy(e),
+            e_version: self.e_version.to_host_copy(e),
+            e_entry: self.e_entry.to_host_copy(e),
+            e_phoff: self.e_phoff.to_host_copy(e),
+            e_shoff: self.e_shoff.to_host_copy(e),
+            e_flags: self.e_flags.to_host_copy(e),
+            e_ehsize: self.e_ehsize.to_host_copy(e),
+            e_phentsize: self.e_phentsize.to_host_copy(e),
+            e_phnum: self.e_phnum.to_host_copy(e),
+            e_shentsize: self.e_shentsize.to_host_copy(e),
+            e_shnum: self.e_shnum.to_host_copy(e),
+            e_shstrndx: self.e_shstrndx.to_host_copy(e),
+        }
+    }
 }

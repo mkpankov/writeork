@@ -1,9 +1,7 @@
 [package]
-
+authors = ["Michael Pankov <work@michaelpankov.com>"]
 name = "writeork"
 version = "0.0.1"
-authors = ["Michael Pankov <work@michaelpankov.com>"]
 
 [dependencies]
-
 clap = "*"
