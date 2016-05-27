@@ -550,6 +550,7 @@ fn work(options: clap::ArgMatches) {
         };
         let phdr: &Elf64_Phdr = unsafe { &*phdr_ptr };
 
+        // FIXME: endianness
         println!("{:?}", phdr);
     }
 }
