@@ -536,8 +536,10 @@ fn work(options: clap::ArgMatches) {
         };
         let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
 
-        let phdr_size = ehdr.e_phentsize * ehdr.e_phnum;
-        let phdr_offset = ehdr.e_phoff;
+        let ehdr_host = ehdr.to_host_copy(&ehdr.get_endianness());
+
+        let phdr_size = ehdr_host.e_phentsize * ehdr_host.e_phnum;
+        let phdr_offset = ehdr_host.e_phoff;
 
         let mut b2 = Vec::<u8>::with_capacity(phdr_size as usize);
         (&f).seek(SeekFrom::Start(phdr_offset)).unwrap();
