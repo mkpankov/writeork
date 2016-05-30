@@ -530,6 +530,7 @@ fn work(options: clap::ArgMatches) {
     if options.is_present("program-headers")
     || options.is_present("segments") {
         use std::io::SeekFrom;
+        use to_host::ToHostCopyStruct;
 
         let ehdr_ptr: *const Elf64_Ehdr = unsafe {
             std::mem::transmute(b.as_ptr())
@@ -550,8 +551,8 @@ fn work(options: clap::ArgMatches) {
         };
         let phdr: &Elf64_Phdr = unsafe { &*phdr_ptr };
 
-        // FIXME: endianness
-        println!("{:?}", phdr);
+        let e = ehdr.get_endianness();
+        println!("{:?}", phdr.to_host_copy(&e));
     }
 }
 
@@ -646,6 +647,22 @@ impl ToHostCopyStruct for Elf64_Ehdr {
             e_shentsize: self.e_shentsize.to_host_copy(e),
             e_shnum: self.e_shnum.to_host_copy(e),
             e_shstrndx: self.e_shstrndx.to_host_copy(e),
+        }
+    }
+}
+
+impl ToHostCopyStruct for Elf64_Phdr {
+    fn to_host_copy(&self, endianness: &Endianness) -> Self {
+        let e = endianness;
+        Elf64_Phdr {
+            p_type: self.p_type.to_host_copy(e),
+            p_flags: self.p_flags.to_host_copy(e),
+            p_offset: self.p_offset.to_host_copy(e),
+            p_vaddr: self.p_vaddr.to_host_copy(e),
+            p_paddr: self.p_paddr.to_host_copy(e),
+            p_filesz: self.p_filesz.to_host_copy(e),
+            p_memsz: self.p_memsz.to_host_copy(e),
+            p_align: self.p_align.to_host_copy(e),
         }
     }
 }
