@@ -740,10 +740,21 @@ fn work(options: clap::ArgMatches) {
     || options.is_present("segments") {
         use to_host::ToHostCopyStruct;
 
-        let ehdr_host = ehdr.to_host_copy(&ehdr.get_endianness());
+        let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
         let e = ehdr.get_endianness();
+        let e_type: ElfEhdrType = unsafe {
+            std::mem::transmute(ehdr.e_type)
+        };
 
-        let phdrs = read_phdrs(&ehdr_host, &mut f);
+        println!("");
+        println!("Elf file type is {}", e_type);
+        println!("Entry point {:#x}", ehdr.e_entry);
+        println!(
+            "There are {} program headers, starting at offset {}",
+            ehdr.e_phnum, ehdr.e_phoff);
+        println!("");
+
+        let phdrs = read_phdrs(&ehdr, &mut f);
 
         println!("Program headers:");
         println!(
