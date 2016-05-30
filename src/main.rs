@@ -414,6 +414,26 @@ struct Elf64_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
+impl Elf64_Ehdr {
+    fn from_slice(buffer: &[u8]) -> Result<&Elf64_Ehdr, ()> {
+        let proper_magic = &[0x7f, b'E', b'L', b'F'];
+        let magic_ptr: *const [u8; 4] = unsafe {
+            std::mem::transmute(buffer.as_ptr())
+        };
+        let magic = unsafe { &*magic_ptr };
+        if proper_magic != magic {
+            return Err(())
+        }
+
+        let ehdr_ptr: *const Elf64_Ehdr = unsafe {
+            std::mem::transmute(buffer.as_ptr())
+        };
+        let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
+
+        Ok(ehdr)
+    }
+}
+
 impl Display for Elf64_Ehdr {
     fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
         let ehdr_ident: &ElfIdentNamed = unsafe {
@@ -481,6 +501,17 @@ struct Elf64_Phdr {
     p_align: Elf64_Xword,
 }
 
+impl Elf64_Phdr {
+    fn from_slice(buffer: &[u8]) -> Result<&Elf64_Phdr, ()> {
+        let phdr_ptr: *const Elf64_Phdr = unsafe {
+            std::mem::transmute(buffer.as_ptr())
+        };
+        let phdr: &Elf64_Phdr = unsafe { &*phdr_ptr };
+
+        Ok(phdr)
+    }
+}
+
 impl Elf64_Ehdr {
     fn get_endianness(&self) -> Endianness {
         use ElfEiData::*;
@@ -509,21 +540,9 @@ fn work(options: clap::ArgMatches) {
 
     (&f).take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
 
-    let proper_magic = &[0x7f, b'E', b'L', b'F'];
-    let magic_ptr: *const [u8; 4] = unsafe {
-        std::mem::transmute(b.as_ptr())
-    };
-    let magic = unsafe { &*magic_ptr };
-    if proper_magic != magic {
-        panic!("Not an ELF file");
-    }
+    let ehdr = Elf64_Ehdr::from_slice(&b).unwrap();
 
     if options.is_present("file-header") {
-        let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
-            std::mem::transmute(b.as_ptr())
-        };
-        let ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
-
         print!("{}", ehdr);
     }
 
@@ -531,11 +550,6 @@ fn work(options: clap::ArgMatches) {
     || options.is_present("segments") {
         use std::io::SeekFrom;
         use to_host::ToHostCopyStruct;
-
-        let ehdr_ptr: *const Elf64_Ehdr = unsafe {
-            std::mem::transmute(b.as_ptr())
-        };
-        let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
 
         let ehdr_host = ehdr.to_host_copy(&ehdr.get_endianness());
 
@@ -546,10 +560,7 @@ fn work(options: clap::ArgMatches) {
         (&f).seek(SeekFrom::Start(phdr_offset)).unwrap();
         (&f).take(phdr_size as u64).read_to_end(&mut b2).unwrap();
 
-        let phdr_ptr: *const Elf64_Phdr = unsafe {
-            std::mem::transmute(b2.as_ptr())
-        };
-        let phdr: &Elf64_Phdr = unsafe { &*phdr_ptr };
+        let phdr = Elf64_Phdr::from_slice(&b2).unwrap();
 
         let e = ehdr.get_endianness();
         println!("{:?}", phdr.to_host_copy(&e));
