@@ -502,13 +502,13 @@ struct Elf64_Phdr {
 }
 
 impl Elf64_Phdr {
-    fn from_slice(buffer: &[u8]) -> Result<&Elf64_Phdr, ()> {
+    fn from_slice(buffer: &[u8]) -> &Elf64_Phdr {
         let phdr_ptr: *const Elf64_Phdr = unsafe {
             std::mem::transmute(buffer.as_ptr())
         };
         let phdr: &Elf64_Phdr = unsafe { &*phdr_ptr };
 
-        Ok(phdr)
+        phdr
     }
 }
 
@@ -560,7 +560,7 @@ fn work(options: clap::ArgMatches) {
         (&f).seek(SeekFrom::Start(phdr_offset)).unwrap();
         (&f).take(phdr_size as u64).read_to_end(&mut b2).unwrap();
 
-        let phdr = Elf64_Phdr::from_slice(&b2).unwrap();
+        let phdr = Elf64_Phdr::from_slice(&b2);
 
         let e = ehdr.get_endianness();
         println!("{:?}", phdr.to_host_copy(&e));
