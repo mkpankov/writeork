@@ -502,6 +502,31 @@ struct Elf64_Phdr {
 }
 
 impl Elf64_Phdr {
+    fn print_with_endianness(&self, e: &Endianness) {
+        print!(
+            concat!(
+                "{:<15}",
+                "{:#08x} ",
+                "{:#018x} ",
+                "{:#018x} ",
+                "{:#08x} ",
+                "{:#08x} ",
+                "{:<3} ",
+                "{:#07x}",
+                ),
+            self.p_type.to_host_copy(e),
+            self.p_offset.to_host_copy(e),
+            self.p_vaddr.to_host_copy(e),
+            self.p_paddr.to_host_copy(e),
+            self.p_filesz.to_host_copy(e),
+            self.p_memsz.to_host_copy(e),
+            self.p_flags.to_host_copy(e),
+            self.p_align.to_host_copy(e),
+        );
+    }
+}
+
+impl Elf64_Phdr {
     fn from_slice(buffer: &[u8]) -> &Elf64_Phdr {
         let phdr_ptr: *const Elf64_Phdr = unsafe {
             std::mem::transmute(buffer.as_ptr())
@@ -632,8 +657,22 @@ fn work(options: clap::ArgMatches) {
 
         let phdrs = read_phdrs(&ehdr_host, &mut f);
 
+        println!("Program headers:");
+        println!(
+            concat!(
+                "  ",
+                "Type           ",
+                "Offset   ",
+                "VirtAddr           ",
+                "PhysAddr           ",
+                "FileSiz  ",
+                "MemSiz   ",
+                "Flg ",
+                "Align"));
         for phdr in phdrs {
-            println!("{:?}", phdr.to_host_copy(&e));
+            print!("  ");
+            phdr.print_with_endianness(&e);
+            println!("");
         }
     }
 }
