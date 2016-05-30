@@ -550,10 +550,45 @@ impl Display for ElfPhdrType {
     }
 }
 
+#[repr(C)]
+#[derive(Debug)]
+struct ElfPhdrFlags {
+    flags: u32,
+}
+
+impl Display for ElfPhdrFlags {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        let maybe_r;
+        let maybe_w;
+        let maybe_x;
+
+        if (self.flags & 0b100) != 0 {
+            maybe_r = "R"
+        } else {
+            maybe_r = " "
+        }
+        if (self.flags & 0b010) != 0 {
+            maybe_w = "W"
+        } else {
+            maybe_w = " "
+        }
+        if (self.flags & 0b001) != 0 {
+            maybe_x = "E"
+        } else {
+            maybe_x = " "
+        }
+
+        write!(fmt, "{}{}{}", maybe_r, maybe_w, maybe_x)
+    }
+}
+
 impl Elf64_Phdr {
     fn print_with_endianness(&self, e: &Endianness) {
-        let ptype: ElfPhdrType = unsafe {
+        let p_type: ElfPhdrType = unsafe {
             std::mem::transmute(self.p_type.to_host_copy(e))
+        };
+        let p_flags: ElfPhdrFlags = unsafe {
+            std::mem::transmute(self.p_flags.to_host_copy(e))
         };
 
         print!(
@@ -567,13 +602,13 @@ impl Elf64_Phdr {
                 "{:<3} ",
                 "{:#x}",
                 ),
-            ptype,
+            p_type,
             self.p_offset.to_host_copy(e),
             self.p_vaddr.to_host_copy(e),
             self.p_paddr.to_host_copy(e),
             self.p_filesz.to_host_copy(e),
             self.p_memsz.to_host_copy(e),
-            self.p_flags.to_host_copy(e),
+            p_flags,
             self.p_align.to_host_copy(e),
         );
     }
