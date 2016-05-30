@@ -512,6 +512,35 @@ impl Elf64_Phdr {
     }
 }
 
+fn convert_byte_vec_to_phdrs_vec(
+    v: Vec<u8>, phdr_num: u16, phdr_size: u16) -> Vec<Elf64_Phdr> {
+    assert_eq!(phdr_num as usize * phdr_size as usize, v.len());
+    let mut r: Vec<Elf64_Phdr> = unsafe {
+        std::mem::transmute(v)
+    };
+    unsafe {
+        r.set_len(phdr_num as usize);
+    }
+    r
+}
+
+fn read_phdrs<R: Read + Seek>(
+    ehdr: &Elf64_Ehdr, reader: &mut R)
+    -> Vec<Elf64_Phdr>
+{
+    use std::io::SeekFrom;
+
+    let phdr_size = ehdr.e_phentsize * ehdr.e_phnum;
+    let phdr_offset = ehdr.e_phoff;
+    let phdr_num = ehdr.e_phnum;
+
+    let mut b = Vec::<u8>::with_capacity(phdr_size as usize * phdr_num as usize);
+    reader.seek(SeekFrom::Start(phdr_offset)).unwrap();
+    reader.take(phdr_size as u64 * phdr_num as u64).read_to_end(&mut b).unwrap();
+
+    convert_byte_vec_to_phdrs_vec(b, phdr_num, phdr_size)
+}
+
 impl Elf64_Ehdr {
     fn get_endianness(&self) -> Endianness {
         use ElfEiData::*;
@@ -535,7 +564,7 @@ impl Elf64_Ehdr {
 
 fn work(options: clap::ArgMatches) {
     let path = options.value_of("FILE").unwrap();
-    let f = File::open(path).unwrap();
+    let mut f = File::open(path).unwrap();
     let mut b = Vec::<u8>::with_capacity(std::mem::size_of::<Elf64_Ehdr>());
 
     (&f).take(std::mem::size_of::<Elf64_Ehdr>() as u64).read_to_end(&mut b).unwrap();
@@ -548,22 +577,16 @@ fn work(options: clap::ArgMatches) {
 
     if options.is_present("program-headers")
     || options.is_present("segments") {
-        use std::io::SeekFrom;
         use to_host::ToHostCopyStruct;
 
         let ehdr_host = ehdr.to_host_copy(&ehdr.get_endianness());
-
-        let phdr_size = ehdr_host.e_phentsize * ehdr_host.e_phnum;
-        let phdr_offset = ehdr_host.e_phoff;
-
-        let mut b2 = Vec::<u8>::with_capacity(phdr_size as usize);
-        (&f).seek(SeekFrom::Start(phdr_offset)).unwrap();
-        (&f).take(phdr_size as u64).read_to_end(&mut b2).unwrap();
-
-        let phdr = Elf64_Phdr::from_slice(&b2);
-
         let e = ehdr.get_endianness();
-        println!("{:?}", phdr.to_host_copy(&e));
+
+        let phdrs = read_phdrs(&ehdr_host, &mut f);
+
+        for phdr in phdrs {
+            println!("{:?}", phdr.to_host_copy(&e));
+        }
     }
 }
 
