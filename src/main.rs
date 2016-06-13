@@ -2,8 +2,12 @@
 
 extern crate clap;
 
+mod elf;
+
 #[macro_use]
 mod to_host;
+
+use elf::ElfIdent;
 
 use to_host::{Endianness, ToHostInPlaceStruct, ToHostCopyStruct};
 use to_host::swap_in_place::SwapInPlace;
@@ -26,14 +30,6 @@ type Elf64_Addr = u64;
 type Elf64_Off = u64;
 
 type Elf64_Xword = u64;
-
-const EI_NIDENT : usize = 16;
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-struct ElfIdent {
-    data: [u8; EI_NIDENT],
-}
 
 #[repr(u8)]
 #[derive(Debug)]
@@ -194,16 +190,6 @@ struct ElfIdentNamed {
     padding2: [u8; 7],
 }
 
-impl Display for ElfIdent {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        for b in self.data.iter() {
-            try!(
-                write!(
-                    fmt, "{:02x} ", b));
-        }
-        Ok(())
-    }
-}
 
 #[repr(u16)]
 #[derive(Debug,PartialEq,PartialOrd,Eq,Ord,Clone,Copy)]
