@@ -47,27 +47,6 @@ enum ElfPhdrType {
 #[repr(u8)]
 #[derive(Debug)]
 #[allow(dead_code)]
-enum ElfEiData {
-    ELFDATANONE,
-    ELFDATA2LSB,
-    ELFDATA2MSB,
-}
-
-impl Display for ElfEiData {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        use ElfEiData::*;
-        let s = match *self {
-            ELFDATANONE => "None",
-            ELFDATA2LSB => "2's complement, little endian",
-            ELFDATA2MSB => "2's complement, big endian",
-        };
-        write!(fmt, "{}", s)
-    }
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-#[allow(dead_code)]
 enum ElfEiVersion {
     EV_NONE,
     EV_CURRENT,
@@ -661,7 +640,6 @@ fn read_phdrs<R: Read + Seek>(
 
 impl Elf64_Ehdr {
     fn get_endianness(&self) -> Endianness {
-        use ElfEiData::*;
         use to_host::Endianness::*;
 
         let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
@@ -672,11 +650,7 @@ impl Elf64_Ehdr {
             std::mem::transmute(&ehdr.e_ident)
         };
 
-        match ehdr_ident.ei_data {
-            ELFDATA2MSB => BE,
-            ELFDATA2LSB => LE,
-            ELFDATANONE => panic!("Unknown data format"),
-        }
+        ehdr_ident.ei_data.get_endianness()
     }
 }
 
