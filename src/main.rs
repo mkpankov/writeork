@@ -46,21 +46,6 @@ enum ElfPhdrType {
 
 #[repr(C)]
 #[derive(Debug)]
-#[allow(dead_code)]
-struct ElfEiAbiVersion {
-    data: u8,
-}
-
-impl Display for ElfEiAbiVersion {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        write!(fmt, "{}", self.data)
-    }
-}
-
-
-
-#[repr(C)]
-#[derive(Debug)]
 struct ElfIdentNamed {
     ei_magic: [u8; 4],
     ei_class: ElfEiClass,
