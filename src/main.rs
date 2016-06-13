@@ -44,19 +44,6 @@ enum ElfPhdrType {
     PT_LOPROC = 0x70000000,
 }
 
-#[repr(C)]
-#[derive(Debug)]
-struct ElfIdentNamed {
-    ei_magic: [u8; 4],
-    ei_class: ElfEiClass,
-    ei_data: ElfEiData,
-    ei_version: ElfEiVersion,
-    ei_osabi: ElfEiOsAbi,
-    ei_osabiversion: ElfEiAbiVersion,
-    padding2: [u8; 7],
-}
-
-
 #[repr(u16)]
 #[derive(Debug,PartialEq,PartialOrd,Eq,Ord,Clone,Copy)]
 #[allow(dead_code)]
@@ -322,11 +309,7 @@ impl Display for Elf64_Ehdr {
             concat!(
                 "ELF Header:\n",
                 "  Magic:   {}\n",
-                "  Class:                             {}\n",
-                "  Data:                              {}\n",
-                "  Version:                           {}\n",
-                "  OS/ABI:                            {}\n",
-                "  ABI Version:                       {}\n",
+                "{}",
                 "  Type:                              {}\n",
                 "  Machine:                           {}\n",
                 "  Version:                           {:#x}\n",
@@ -342,11 +325,7 @@ impl Display for Elf64_Ehdr {
                 "  Section header string table index: {}\n",
                 ),
             self.e_ident,
-            ehdr_ident.ei_class,
-            ehdr_ident.ei_data,
-            ehdr_ident.ei_version,
-            ehdr_ident.ei_osabi,
-            ehdr_ident.ei_osabiversion,
+            ehdr_ident,
             self.e_type.to_host_copy(&e),
             self.e_machine.to_host_copy(&e),
             self.e_version.to_host_copy(&e),
@@ -566,7 +545,7 @@ impl Elf64_Ehdr {
             std::mem::transmute(&ehdr.e_ident)
         };
 
-        ehdr_ident.ei_data.get_endianness()
+        ehdr_ident.get_endianness()
     }
 }
 
