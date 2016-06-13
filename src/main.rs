@@ -21,15 +21,6 @@ use std::io::prelude::*;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 
-#[repr(u8)]
-#[derive(Debug)]
-#[allow(dead_code)]
-enum ElfEiClass {
-    ELFCLASSNONE,
-    ELFCLASS32,
-    ELFCLASS64,
-}
-
 #[repr(u32)]
 #[derive(Debug)]
 #[allow(dead_code)]
@@ -51,18 +42,6 @@ enum ElfPhdrType {
     PT_SUNWSTACK = 0x6ffffffb,
     PT_HISUNW = 0x6fffffff,
     PT_LOPROC = 0x70000000,
-}
-
-impl Display for ElfEiClass {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        use ElfEiClass::*;
-        let s = match *self {
-            ELFCLASSNONE => "None",
-            ELFCLASS32 => "ELF32",
-            ELFCLASS64 => "ELF64",
-        };
-        write!(fmt, "{}", s)
-    }
 }
 
 #[repr(u8)]
