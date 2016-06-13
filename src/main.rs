@@ -47,25 +47,6 @@ enum ElfPhdrType {
 #[repr(u8)]
 #[derive(Debug)]
 #[allow(dead_code)]
-enum ElfEiVersion {
-    EV_NONE,
-    EV_CURRENT,
-}
-
-impl Display for ElfEiVersion {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        use ElfEiVersion::*;
-        let s = match *self {
-            EV_NONE => "None",
-            EV_CURRENT => "1 (current)",
-        };
-        write!(fmt, "{}", s)
-    }
-}
-
-#[repr(u8)]
-#[derive(Debug)]
-#[allow(dead_code)]
 enum ElfEiOsAbi {
     ELFOSABI_NONE = 0,
     ELFOSABI_HPUX = 1,
