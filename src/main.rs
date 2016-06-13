@@ -21,16 +21,6 @@ use std::io::prelude::*;
 use std::fmt::{Display, Formatter};
 use std::fs::File;
 
-type Elf64_Half = u16;
-
-type Elf64_Word = u32;
-
-type Elf64_Addr = u64;
-
-type Elf64_Off = u64;
-
-type Elf64_Xword = u64;
-
 #[repr(u8)]
 #[derive(Debug)]
 #[allow(dead_code)]
