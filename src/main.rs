@@ -640,8 +640,6 @@ fn read_phdrs<R: Read + Seek>(
 
 impl Elf64_Ehdr {
     fn get_endianness(&self) -> Endianness {
-        use to_host::Endianness::*;
-
         let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
             std::mem::transmute(self)
         };
