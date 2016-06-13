@@ -7,7 +7,7 @@ mod elf;
 #[macro_use]
 mod to_host;
 
-use elf::ElfIdent;
+use elf::prelude::*;
 
 use to_host::{Endianness, ToHostInPlaceStruct, ToHostCopyStruct};
 use to_host::swap_in_place::SwapInPlace;
