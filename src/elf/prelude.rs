@@ -11,3 +11,4 @@ pub use super::elf_ehdr_machine::ElfEhdrMachine;
 pub use super::elf64_ehdr::Elf64_Ehdr;
 pub use super::elf_phdr_type::ElfPhdrType;
 pub use super::elf_phdr_flags::ElfPhdrFlags;
+pub use super::elf64_phdr::Elf64_Phdr;
