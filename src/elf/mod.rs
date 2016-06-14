@@ -10,5 +10,6 @@ pub mod elf_ehdr_type;
 pub mod elf_ehdr_machine;
 pub mod elf64_ehdr;
 pub mod elf_phdr_type;
+pub mod elf_phdr_flags;
 
 pub mod prelude;
