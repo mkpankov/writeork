@@ -8,3 +8,4 @@ pub use super::elf_ei_abi_version::ElfEiAbiVersion;
 pub use super::elf_ident_named::ElfIdentNamed;
 pub use super::elf_ehdr_type::ElfEhdrType;
 pub use super::elf_ehdr_machine::ElfEhdrMachine;
+pub use super::elf64_ehdr::Elf64_Ehdr;

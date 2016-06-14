@@ -44,91 +44,6 @@ enum ElfPhdrType {
     PT_LOPROC = 0x70000000,
 }
 
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-struct Elf64_Ehdr {
-    e_ident: ElfIdent,
-    e_type: ElfEhdrType,
-    e_machine: ElfEhdrMachine,
-    e_version: Elf64_Word,
-    e_entry: Elf64_Addr,
-    e_phoff: Elf64_Off,
-    e_shoff: Elf64_Off,
-    e_flags: Elf64_Word,
-    e_ehsize: Elf64_Half,
-    e_phentsize: Elf64_Half,
-    e_phnum: Elf64_Half,
-    e_shentsize: Elf64_Half,
-    e_shnum: Elf64_Half,
-    e_shstrndx: Elf64_Half
-}
-
-impl Elf64_Ehdr {
-    fn from_slice(buffer: &[u8]) -> Result<&Elf64_Ehdr, ()> {
-        let proper_magic = &[0x7f, b'E', b'L', b'F'];
-        let magic_ptr: *const [u8; 4] = unsafe {
-            std::mem::transmute(buffer.as_ptr())
-        };
-        let magic = unsafe { &*magic_ptr };
-        if proper_magic != magic {
-            return Err(())
-        }
-
-        let ehdr_ptr: *const Elf64_Ehdr = unsafe {
-            std::mem::transmute(buffer.as_ptr())
-        };
-        let ehdr: &Elf64_Ehdr = unsafe { &*ehdr_ptr };
-
-        Ok(ehdr)
-    }
-}
-
-impl Display for Elf64_Ehdr {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
-        let ehdr_ident: &ElfIdentNamed = unsafe {
-            std::mem::transmute(&self.e_ident)
-        };
-
-        let e = self.get_endianness();
-
-        write!(
-            fmt,
-            concat!(
-                "ELF Header:\n",
-                "  Magic:   {}\n",
-                "{}",
-                "  Type:                              {}\n",
-                "  Machine:                           {}\n",
-                "  Version:                           {:#x}\n",
-                "  Entry point address:               {:#x}\n",
-                "  Start of program headers:          {} (bytes into file)\n",
-                "  Start of section headers:          {} (bytes into file)\n",
-                "  Flags:                             {:#x}\n",
-                "  Size of this header:               {} (bytes)\n",
-                "  Size of program headers:           {} (bytes)\n",
-                "  Number of program headers:         {}\n",
-                "  Size of section headers:           {} (bytes)\n",
-                "  Number of section headers:         {}\n",
-                "  Section header string table index: {}\n",
-                ),
-            self.e_ident,
-            ehdr_ident,
-            self.e_type.to_host_copy(&e),
-            self.e_machine.to_host_copy(&e),
-            self.e_version.to_host_copy(&e),
-            self.e_entry.to_host_copy(&e),
-            self.e_phoff.to_host_copy(&e),
-            self.e_shoff.to_host_copy(&e),
-            self.e_flags.to_host_copy(&e),
-            self.e_ehsize.to_host_copy(&e),
-            self.e_phentsize.to_host_copy(&e),
-            self.e_phnum.to_host_copy(&e),
-            self.e_shentsize.to_host_copy(&e),
-            self.e_shnum.to_host_copy(&e),
-            self.e_shstrndx.to_host_copy(&e))
-    }
-}
-
 #[derive(Debug)]
 #[repr(C)]
 struct Elf64_Phdr {
@@ -311,29 +226,15 @@ fn read_phdrs<R: Read + Seek>(
 {
     use std::io::SeekFrom;
 
-    let phdr_size = ehdr.e_phentsize * ehdr.e_phnum;
-    let phdr_offset = ehdr.e_phoff;
-    let phdr_num = ehdr.e_phnum;
+    let phdr_size = ehdr.get_phentsize() * ehdr.get_phnum();
+    let phdr_offset = ehdr.get_phoff();
+    let phdr_num = ehdr.get_phnum();
 
     let mut b = Vec::<u8>::with_capacity(phdr_size as usize * phdr_num as usize);
     reader.seek(SeekFrom::Start(phdr_offset)).unwrap();
     reader.take(phdr_size as u64 * phdr_num as u64).read_to_end(&mut b).unwrap();
 
     convert_byte_vec_to_phdrs_vec(b, phdr_num, phdr_size)
-}
-
-impl Elf64_Ehdr {
-    fn get_endianness(&self) -> Endianness {
-        let ehdr_ptr: *mut Elf64_Ehdr = unsafe {
-            std::mem::transmute(self)
-        };
-        let ehdr: &mut Elf64_Ehdr = unsafe { &mut *ehdr_ptr };
-        let ehdr_ident: &ElfIdentNamed = unsafe {
-            std::mem::transmute(&ehdr.e_ident)
-        };
-
-        ehdr_ident.get_endianness()
-    }
 }
 
 fn work(options: clap::ArgMatches) {
@@ -354,15 +255,15 @@ fn work(options: clap::ArgMatches) {
         let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
         let e = ehdr.get_endianness();
         let e_type: ElfEhdrType = unsafe {
-            std::mem::transmute(ehdr.e_type)
+            std::mem::transmute(ehdr.get_type())
         };
 
         println!("");
         println!("Elf file type is {}", e_type);
-        println!("Entry point {:#x}", ehdr.e_entry);
+        println!("Entry point {:#x}", ehdr.get_entry());
         println!(
             "There are {} program headers, starting at offset {}",
-            ehdr.e_phnum, ehdr.e_phoff);
+            ehdr.get_phnum(), ehdr.get_phoff());
         println!("");
 
         let phdrs = read_phdrs(&ehdr, &mut f);
@@ -440,47 +341,6 @@ swap_copy_wrapper!(ElfEhdrType, u16);
 swap_copy_wrapper!(ElfEhdrMachine, u16);
 to_host_copy_wrapper!(ElfEhdrType, u16);
 to_host_copy_wrapper!(ElfEhdrMachine, u16);
-
-impl ToHostInPlaceStruct for Elf64_Ehdr {
-    fn to_host_in_place(&mut self, endianness: &Endianness) {
-        let e = endianness;
-        self.e_type.to_host_in_place(e);
-        self.e_machine.to_host_in_place(e);
-        self.e_version.to_host_in_place(e);
-        self.e_entry.to_host_in_place(e);
-        self.e_phoff.to_host_in_place(e);
-        self.e_shoff.to_host_in_place(e);
-        self.e_flags.to_host_in_place(e);
-        self.e_ehsize.to_host_in_place(e);
-        self.e_phentsize.to_host_in_place(e);
-        self.e_phnum.to_host_in_place(e);
-        self.e_shentsize.to_host_in_place(e);
-        self.e_shnum.to_host_in_place(e);
-        self.e_shstrndx.to_host_in_place(e);
-    }
-}
-
-impl ToHostCopyStruct for Elf64_Ehdr {
-    fn to_host_copy(&self, endianness: &Endianness) -> Self {
-        let e = endianness;
-        Elf64_Ehdr {
-            e_ident: self.e_ident,
-            e_type: self.e_type.to_host_copy(e),
-            e_machine: self.e_machine.to_host_copy(e),
-            e_version: self.e_version.to_host_copy(e),
-            e_entry: self.e_entry.to_host_copy(e),
-            e_phoff: self.e_phoff.to_host_copy(e),
-            e_shoff: self.e_shoff.to_host_copy(e),
-            e_flags: self.e_flags.to_host_copy(e),
-            e_ehsize: self.e_ehsize.to_host_copy(e),
-            e_phentsize: self.e_phentsize.to_host_copy(e),
-            e_phnum: self.e_phnum.to_host_copy(e),
-            e_shentsize: self.e_shentsize.to_host_copy(e),
-            e_shnum: self.e_shnum.to_host_copy(e),
-            e_shstrndx: self.e_shstrndx.to_host_copy(e),
-        }
-    }
-}
 
 impl ToHostCopyStruct for Elf64_Phdr {
     fn to_host_copy(&self, endianness: &Endianness) -> Self {

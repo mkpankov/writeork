@@ -8,5 +8,6 @@ pub mod elf_ei_abi_version;
 pub mod elf_ident_named;
 pub mod elf_ehdr_type;
 pub mod elf_ehdr_machine;
+pub mod elf64_ehdr;
 
 pub mod prelude;
