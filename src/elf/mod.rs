@@ -9,5 +9,6 @@ pub mod elf_ident_named;
 pub mod elf_ehdr_type;
 pub mod elf_ehdr_machine;
 pub mod elf64_ehdr;
+pub mod elf_phdr_type;
 
 pub mod prelude;

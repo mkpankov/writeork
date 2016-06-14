@@ -9,3 +9,4 @@ pub use super::elf_ident_named::ElfIdentNamed;
 pub use super::elf_ehdr_type::ElfEhdrType;
 pub use super::elf_ehdr_machine::ElfEhdrMachine;
 pub use super::elf64_ehdr::Elf64_Ehdr;
+pub use super::elf_phdr_type::ElfPhdrType;
