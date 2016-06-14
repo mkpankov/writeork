@@ -2,23 +2,15 @@
 
 extern crate clap;
 
-mod elf;
-
 #[macro_use]
 mod to_host;
 
+mod elf;
 use elf::prelude::*;
-
-use to_host::{Endianness, ToHostInPlaceStruct, ToHostCopyStruct};
-use to_host::swap_in_place::SwapInPlace;
-use to_host::swap_copy::SwapCopy;
-use to_host::to_host_in_place::ToHostInPlace;
-use to_host::to_host_copy::ToHostCopy;
 
 use clap::App;
 
 use std::io::prelude::*;
-use std::fmt::{Display, Formatter};
 use std::fs::File;
 
 fn convert_byte_vec_to_ehdr_vec(
@@ -194,13 +186,3 @@ fn process_args_and_work() {
 fn main() {
     process_args_and_work();
 }
-
-swap_in_place_wrapper!(ElfEhdrType, u16);
-swap_in_place_wrapper!(ElfEhdrMachine, u16);
-to_host_in_place_wrapper!(ElfEhdrType, u16);
-to_host_in_place_wrapper!(ElfEhdrMachine, u16);
-
-swap_copy_wrapper!(ElfEhdrType, u16);
-swap_copy_wrapper!(ElfEhdrMachine, u16);
-to_host_copy_wrapper!(ElfEhdrType, u16);
-to_host_copy_wrapper!(ElfEhdrMachine, u16);

@@ -25,10 +25,10 @@ impl ToHostInPlace for u16 { }
 #[macro_export]
 macro_rules! to_host_in_place_wrapper {
     ( $wrapper:ty, $t:ty ) => {
-        impl ToHostInPlace for $wrapper {
-            fn to_host_in_place(&mut self, endianness: &Endianness) {
+        impl ::to_host::to_host_in_place::ToHostInPlace for $wrapper {
+            fn to_host_in_place(&mut self, endianness: &::to_host::Endianness) {
                 let self_: &mut $t = unsafe {
-                    std::mem::transmute(self)
+                    ::std::mem::transmute(self)
                 };
                 self_.to_host_in_place(endianness);
             }

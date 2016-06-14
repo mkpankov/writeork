@@ -32,14 +32,14 @@ swap_copy!(u16, 2);
 #[macro_export]
 macro_rules! swap_copy_wrapper {
     ( $wrapper:ty, $t:ty ) => {
-        impl SwapCopy for $wrapper {
+        impl ::to_host::swap_copy::SwapCopy for $wrapper {
             fn swap_copy(&self) -> Self {
                 let self_: &$t = unsafe {
-                    std::mem::transmute(self)
+                    ::std::mem::transmute(self)
                 };
                 let result_ = self_.swap_copy();
                 unsafe {
-                    std::mem::transmute(result_)
+                    ::std::mem::transmute(result_)
                 }
             }
         }

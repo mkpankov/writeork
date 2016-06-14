@@ -182,3 +182,8 @@ impl Display for ElfEhdrMachine {
         write!(fmt, "{}", s)
     }
 }
+
+swap_in_place_wrapper!(ElfEhdrMachine, u16);
+to_host_in_place_wrapper!(ElfEhdrMachine, u16);
+swap_copy_wrapper!(ElfEhdrMachine, u16);
+to_host_copy_wrapper!(ElfEhdrMachine, u16);

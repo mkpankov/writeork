@@ -30,10 +30,10 @@ swap_in_place!(u16, 2);
 #[macro_export]
 macro_rules! swap_in_place_wrapper {
     ( $wrapper:ty, $t:ty ) => {
-        impl SwapInPlace for $wrapper {
+        impl ::to_host::swap_in_place::SwapInPlace for $wrapper {
             fn swap_in_place(&mut self) {
                 let self_: &mut $t = unsafe {
-                    std::mem::transmute(self)
+                    ::std::mem::transmute(self)
                 };
                 self_.swap_in_place();
             }
