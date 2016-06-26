@@ -1,4 +1,3 @@
-use ::std::fmt::{Display, Formatter};
 use ::to_host::Endianness;
 use ::to_host::to_host_copy::ToHostCopy;
 use ::to_host::ToHostCopyStruct;
@@ -52,6 +51,7 @@ impl Elf64_Phdr {
 }
 
 impl Elf64_Phdr {
+    #[allow(dead_code)]
     fn from_slice(buffer: &[u8]) -> &Elf64_Phdr {
         let phdr_ptr: *const Elf64_Phdr = unsafe {
             ::std::mem::transmute(buffer.as_ptr())
