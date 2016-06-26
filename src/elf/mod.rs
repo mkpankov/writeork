@@ -7,12 +7,14 @@ pub mod elf_ei_abi_version;
 pub mod elf_ident_named;
 pub mod elf_ehdr_type;
 pub mod elf_ehdr_machine;
-pub mod elf64_ehdr;
 pub mod elf_phdr_type;
 pub mod elf_phdr_flags;
 pub mod elf64_phdr;
 
-pub mod b32;
-pub mod b64;
+mod b32;
+mod b64;
+
+pub use ::elf::b32::elf_ehdr::Elf_Ehdr as Elf32_Ehdr;
+pub use ::elf::b64::elf_ehdr::Elf_Ehdr as Elf64_Ehdr;
 
 pub mod prelude;
