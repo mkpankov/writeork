@@ -4,7 +4,7 @@ use ::to_host::to_host_copy::ToHostCopy;
 use ::to_host::ToHostCopyStruct;
 use super::elf_phdr_type::ElfPhdrType;
 use super::elf_phdr_flags::ElfPhdrFlags;
-use super::primitive::*;
+use super::b64::primitive::*;
 
 #[derive(Debug)]
 #[repr(C)]

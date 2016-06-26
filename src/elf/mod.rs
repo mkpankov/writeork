@@ -1,5 +1,4 @@
 pub mod elf_ident;
-pub mod primitive;
 pub mod elf_ei_class;
 pub mod elf_ei_data;
 pub mod elf_ei_version;
@@ -12,5 +11,8 @@ pub mod elf64_ehdr;
 pub mod elf_phdr_type;
 pub mod elf_phdr_flags;
 pub mod elf64_phdr;
+
+pub mod b32;
+pub mod b64;
 
 pub mod prelude;
