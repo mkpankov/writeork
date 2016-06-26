@@ -12,6 +12,8 @@ pub mod elf_phdr_flags;
 
 #[macro_use]
 mod elf_ehdr;
+#[macro_use]
+mod elf_phdr;
 
 mod b32;
 mod b64;
