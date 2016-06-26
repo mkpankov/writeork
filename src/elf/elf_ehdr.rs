@@ -30,26 +30,6 @@ macro_rules! elf_ehdr {
             e_shstrndx: $half
         }
 
-        impl Elf_Ehdr {
-            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr, ()> {
-                let proper_magic = &[0x7f, b'E', b'L', b'F'];
-                let magic_ptr: *const [u8; 4] = unsafe {
-                    ::std::mem::transmute(buffer.as_ptr())
-                };
-                let magic = unsafe { &*magic_ptr };
-                if proper_magic != magic {
-                    return Err(())
-                }
-
-                let ehdr_ptr: *const Elf_Ehdr = unsafe {
-                    ::std::mem::transmute(buffer.as_ptr())
-                };
-                let ehdr: &Elf_Ehdr = unsafe { &*ehdr_ptr };
-
-                Ok(ehdr)
-            }
-        }
-
         impl Display for Elf_Ehdr {
             fn fmt(&self, fmt: &mut Formatter) -> ::std::fmt::Result {
                 let ehdr_ident: &ElfIdentNamed = unsafe {
@@ -97,46 +77,78 @@ macro_rules! elf_ehdr {
         }
 
         impl Elf_Ehdr {
+            #[allow(dead_code)]
+            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr, ()> {
+                let proper_magic = &[0x7f, b'E', b'L', b'F'];
+                let magic_ptr: *const [u8; 4] = unsafe {
+                    ::std::mem::transmute(buffer.as_ptr())
+                };
+                let magic = unsafe { &*magic_ptr };
+                if proper_magic != magic {
+                    return Err(())
+                }
+
+                let ehdr_ptr: *const Elf_Ehdr = unsafe {
+                    ::std::mem::transmute(buffer.as_ptr())
+                };
+                let ehdr: &Elf_Ehdr = unsafe { &*ehdr_ptr };
+
+                Ok(ehdr)
+            }
+            #[allow(dead_code)]
             pub fn get_phentsize(&self) -> u16 {
                 self.e_phentsize
             }
+            #[allow(dead_code)]
             pub fn get_phnum(&self) -> u16 {
                 self.e_phnum
             }
+            #[allow(dead_code)]
             pub fn get_phoff(&self) -> $off {
                 self.e_phoff
             }
+            #[allow(dead_code)]
             pub fn get_entry(&self) -> $addr {
                 self.e_entry
             }
+            #[allow(dead_code)]
             pub fn get_type(&self) -> ElfEhdrType {
                 self.e_type
             }
+            #[allow(dead_code)]
             pub fn get_machine(&self) -> ElfEhdrMachine {
                 self.e_machine
             }
+            #[allow(dead_code)]
             pub fn get_version(&self) -> u32 {
                 self.e_version
             }
+            #[allow(dead_code)]
             pub fn get_shoff(&self) -> $off {
                 self.e_shoff
             }
+            #[allow(dead_code)]
             pub fn get_flags(&self) -> u32 {
                 self.e_flags
             }
+            #[allow(dead_code)]
             pub fn get_ehsize(&self) -> u16 {
                 self.e_ehsize
             }
+            #[allow(dead_code)]
             pub fn get_shentsize(&self) -> u16 {
                 self.e_shentsize
             }
+            #[allow(dead_code)]
             pub fn get_shnum(&self) -> u16 {
                 self.e_shnum
             }
+            #[allow(dead_code)]
             pub fn get_shstrndx(&self) -> u16 {
                 self.e_shstrndx
             }
 
+            #[allow(dead_code)]
             pub fn get_endianness(&self) -> Endianness {
                 let ehdr_ptr: *mut Elf_Ehdr = unsafe {
                     ::std::mem::transmute(self)
