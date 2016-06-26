@@ -11,6 +11,9 @@ pub mod elf_phdr_type;
 pub mod elf_phdr_flags;
 pub mod elf64_phdr;
 
+#[macro_use]
+mod elf_ehdr;
+
 mod b32;
 mod b64;
 
