@@ -12,3 +12,4 @@ pub use super::{Elf32_Ehdr, Elf64_Ehdr};
 pub use super::elf_phdr_type::ElfPhdrType;
 pub use super::elf_phdr_flags::ElfPhdrFlags;
 pub use super::{Elf32_Phdr, Elf64_Phdr};
+pub use super::read_ehdr;

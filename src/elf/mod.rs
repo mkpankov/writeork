@@ -25,3 +25,6 @@ pub use ::elf::b64::elf_ehdr::Elf_Ehdr as Elf64_Ehdr;
 pub use ::elf::b64::elf_phdr::Elf_Phdr as Elf64_Phdr;
 
 pub mod prelude;
+pub mod helpers;
+
+pub use ::elf::helpers::read_ehdr;
