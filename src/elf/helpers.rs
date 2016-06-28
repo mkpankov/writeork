@@ -2,7 +2,9 @@ use super::b64::elf_ehdr::Elf_Ehdr as Elf64_Ehdr;
 use std::io::{Read, Seek};
 
 fn convert_byte_vec_to_ehdr_vec(
-    v: Vec<u8>) -> Result<Vec<Elf64_Ehdr>, ()> {
+    v: Vec<u8>) 
+    -> Result<Vec<Elf64_Ehdr>, ()> 
+{
     let ehdr_size = ::std::mem::size_of::<Elf64_Ehdr>();
 
     assert_eq!(ehdr_size as usize, v.len());
@@ -26,7 +28,8 @@ fn convert_byte_vec_to_ehdr_vec(
 }
 
 fn convert_ehdr_vec_to_ehdr_box(
-    mut v: Vec<Elf64_Ehdr>) -> Box<Elf64_Ehdr>
+    mut v: Vec<Elf64_Ehdr>) 
+    -> Box<Elf64_Ehdr>
 {
     let ehdr = v.pop().unwrap();
     let r = Box::new(ehdr);
