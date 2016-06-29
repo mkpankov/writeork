@@ -14,6 +14,8 @@ pub mod elf_phdr_flags;
 mod elf_ehdr;
 #[macro_use]
 mod elf_phdr;
+#[macro_use]
+mod helpers;
 
 mod b32;
 mod b64;
@@ -25,6 +27,7 @@ pub use ::elf::b64::elf_ehdr::Elf_Ehdr as Elf64_Ehdr;
 pub use ::elf::b64::elf_phdr::Elf_Phdr as Elf64_Phdr;
 
 pub mod prelude;
-pub mod helpers;
 
-pub use ::elf::helpers::read_ehdr;
+
+pub use ::elf::b32::helpers::read_ehdr as read_elf32_ehdr;
+pub use ::elf::b64::helpers::read_ehdr as read_elf64_ehdr;

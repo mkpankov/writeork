@@ -47,7 +47,7 @@ fn work(options: clap::ArgMatches) {
 
     let mut f = File::open(path).unwrap();
 
-    let ehdr = read_ehdr(&mut f);
+    let ehdr = read_elf64_ehdr(&mut f);
 
     if options.is_present("file-header") {
         print!("{}", ehdr);
