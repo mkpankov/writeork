@@ -31,6 +31,9 @@ pub mod prelude;
 pub use ::elf::b32::helpers::read_ehdr as read_elf32_ehdr;
 pub use ::elf::b64::helpers::read_ehdr as read_elf64_ehdr;
 
+pub use ::elf::b32::helpers::read_phdrs as read_elf32_phdrs;
+pub use ::elf::b64::helpers::read_phdrs as read_elf64_phdrs;
+
 fn _static_asserts() {
     let ei_bytes: elf_ident::ElfIdent = unsafe {
         ::std::mem::uninitialized()
