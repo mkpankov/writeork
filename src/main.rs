@@ -2,6 +2,7 @@
 
 extern crate clap;
 
+// FIXME: Macro export from to_host is ugly. I'd like to hide to_host module.
 #[macro_use]
 mod to_host;
 
