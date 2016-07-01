@@ -14,7 +14,8 @@ use std::io::prelude::*;
 use std::fs::File;
 
 fn convert_byte_vec_to_phdrs_vec(
-    v: Vec<u8>, phdr_num: u16, phdr_size: u16) -> Vec<Elf64_Phdr> {
+    v: Vec<u8>, phdr_num: u16, phdr_size: u16) 
+    -> Vec<Elf64_Phdr> {
     assert_eq!(phdr_num as usize * phdr_size as usize, v.len());
     let mut r: Vec<Elf64_Phdr> = unsafe {
         std::mem::transmute(v)
