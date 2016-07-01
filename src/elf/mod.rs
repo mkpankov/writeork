@@ -28,6 +28,28 @@ pub use ::elf::b64::elf_phdr::Elf_Phdr as Elf64_Phdr;
 
 pub mod prelude;
 
-
 pub use ::elf::b32::helpers::read_ehdr as read_elf32_ehdr;
 pub use ::elf::b64::helpers::read_ehdr as read_elf64_ehdr;
+
+fn _static_asserts() {
+    let ei_bytes: elf_ident::ElfIdent = unsafe {
+        ::std::mem::uninitialized()
+    };
+    let _ei_named: elf_ident_named::ElfIdentNamed = unsafe {
+        ::std::mem::transmute(ei_bytes)
+    };
+
+    let ehdr_type_bytes: b64::primitive::Elf64_Half = unsafe {
+        ::std::mem::uninitialized()
+    };
+    let _ehdr_type: elf_ehdr_type::ElfEhdrType = unsafe {
+        ::std::mem::transmute(ehdr_type_bytes)
+    };
+
+    let ehdr_machine_bytes: b64::primitive::Elf64_Half = unsafe {
+        ::std::mem::uninitialized()
+    };
+    let _ehdr_machine: elf_ehdr_machine::ElfEhdrMachine = unsafe {
+        ::std::mem::transmute(ehdr_machine_bytes)
+    };
+}

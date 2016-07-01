@@ -94,29 +94,6 @@ fn work(options: clap::ArgMatches) {
     }
 }
 
-fn _static_asserts() {
-    let ei_bytes: ElfIdent = unsafe {
-        std::mem::uninitialized()
-    };
-    let _ei_named: ElfIdentNamed = unsafe {
-        std::mem::transmute(ei_bytes)
-    };
-
-    let ehdr_type_bytes: Elf64_Half = unsafe {
-        std::mem::uninitialized()
-    };
-    let _ehdr_type: ElfEhdrType = unsafe {
-        std::mem::transmute(ehdr_type_bytes)
-    };
-
-    let ehdr_machine_bytes: Elf64_Half = unsafe {
-        std::mem::uninitialized()
-    };
-    let _ehdr_machine: ElfEhdrMachine = unsafe {
-        std::mem::transmute(ehdr_machine_bytes)
-    };
-}
-
 fn process_args_and_work() {
     let options =
         App::new("writeork")
