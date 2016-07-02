@@ -20,7 +20,8 @@ fn work(options: clap::ArgMatches) {
 
     // FIXME: This is lazy guessing of bitness.
     // We first read Ehdr as 32-bit variant and then check 
-    // if it's actually 32-bit. It works because ELF_EICLASS is always the same.
+    // if it's actually 32-bit. It works because ELF_EICLASS byte offset 
+    // is always the same.
     let ehdr = read_elf32_ehdr(&mut f);
     let elf_ident = ehdr.get_ident();
     let elf_class = elf_ident.get_class();
