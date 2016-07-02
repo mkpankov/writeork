@@ -112,6 +112,12 @@ macro_rules! elf_ehdr {
                 self.e_entry
             }
             #[allow(dead_code)]
+            pub fn get_ident(&self) -> ElfIdentNamed {
+                unsafe { 
+                    ::std::mem::transmute(self.e_ident)
+                }
+            }
+            #[allow(dead_code)]
             pub fn get_type(&self) -> ElfEhdrType {
                 self.e_type
             }

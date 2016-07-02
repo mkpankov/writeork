@@ -18,10 +18,21 @@ fn work(options: clap::ArgMatches) {
 
     let mut f = File::open(path).unwrap();
 
-    let ehdr = read_elf64_ehdr(&mut f);
+    // FIXME: This is lazy guessing of bitness.
+    // We first read Ehdr as 32-bit variant and then check 
+    // if it's actually 32-bit. It works because ELF_EICLASS is always the same.
+    let ehdr = read_elf32_ehdr(&mut f);
+    let elf_ident = ehdr.get_ident();
+    let elf_class = elf_ident.get_class();
 
     if options.is_present("file-header") {
-        print!("{}", ehdr);
+        if elf_class != ElfEiClass::ELFCLASS32 {
+            // Reread the header as Elf64_Ehdr
+            let ehdr = read_elf64_ehdr(&mut f);
+            print!("{}", ehdr);
+        } else {
+            print!("{}", ehdr);
+        }
     }
 
     if options.is_present("program-headers")
@@ -42,24 +53,55 @@ fn work(options: clap::ArgMatches) {
             ehdr.get_phnum(), ehdr.get_phoff());
         println!("");
 
-        let phdrs = read_elf64_phdrs(&ehdr, &mut f);
+        match elf_class {
+            // FIXME: This fugly code is due to ehdr and phdrs being of 
+            // different type in different branches of control flow
+            ElfEiClass::ELFCLASS32 => {
+                let phdrs = read_elf32_phdrs(&ehdr, &mut f);
 
-        println!("Program headers:");
-        println!(
-            concat!(
-                "  ",
-                "Type           ",
-                "Offset   ",
-                "VirtAddr           ",
-                "PhysAddr           ",
-                "FileSiz  ",
-                "MemSiz   ",
-                "Flg ",
-                "Align"));
-        for phdr in phdrs {
-            print!("  ");
-            phdr.print_with_endianness(&e);
-            println!("");
+                println!("Program headers:");
+                println!(
+                    concat!(
+                        "  ",
+                        "Type           ",
+                        "Offset   ",
+                        "VirtAddr           ",
+                        "PhysAddr           ",
+                        "FileSiz  ",
+                        "MemSiz   ",
+                        "Flg ",
+                        "Align"));
+                for phdr in phdrs {
+                    print!("  ");
+                    phdr.print_with_endianness(&e);
+                    println!("");
+                }
+            }
+            ElfEiClass::ELFCLASS64 => {
+                let ehdr = read_elf64_ehdr(&mut f);
+                let phdrs = read_elf64_phdrs(&ehdr, &mut f);
+
+                println!("Program headers:");
+                println!(
+                    concat!(
+                        "  ",
+                        "Type           ",
+                        "Offset   ",
+                        "VirtAddr           ",
+                        "PhysAddr           ",
+                        "FileSiz  ",
+                        "MemSiz   ",
+                        "Flg ",
+                        "Align"));
+                for phdr in phdrs {
+                    print!("  ");
+                    phdr.print_with_endianness(&e);
+                    println!("");
+                }
+            }
+            ElfEiClass::ELFCLASSNONE => {
+                println!("This ELF file has ELFCLASSNONE. We can't get its bitness");
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
 use ::std::fmt::{Display, Formatter};
 
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 #[allow(dead_code)]
 pub enum ElfEiClass {
     ELFCLASSNONE,

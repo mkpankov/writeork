@@ -38,4 +38,7 @@ impl ElfIdentNamed {
     pub fn get_endianness(&self) -> ::to_host::Endianness {
         self.ei_data.get_endianness()
     }
+    pub fn get_class(&self) -> ElfEiClass {
+        self.ei_class
+    }
 }
