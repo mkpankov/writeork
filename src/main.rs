@@ -38,6 +38,7 @@ fn work(options: clap::ArgMatches) {
     if options.is_present("program-headers")
     || options.is_present("segments") {
         use to_host::ToHostCopyStruct;
+        // FIXME: All of this is broken due to ehdr being always 32-bit here.
 
         let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
         let e = ehdr.get_endianness();
@@ -123,6 +124,11 @@ fn process_args_and_work() {
     work(options);
 }
 
+fn asserts() {
+    elf::elf_ident_named::asserts();
+}
+
 fn main() {
+    asserts();
     process_args_and_work();
 }

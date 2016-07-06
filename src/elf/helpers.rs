@@ -9,17 +9,11 @@ macro_rules! read_ehdr {
             let ehdr_size = ::std::mem::size_of::<$t>();
 
             assert_eq!(ehdr_size as usize, v.len());
+            
+            try!(validate_elf_magic(&v[..EI_MAGIC_SIZE]));
+
             let bytes_ptr: *mut u8 = v.as_mut_ptr();
             ::std::mem::forget(v);
-
-            let proper_magic = &[0x7f, b'E', b'L', b'F'];
-            let magic_ptr: *const [u8; 4] = unsafe {
-                ::std::mem::transmute(bytes_ptr)
-            };
-            let magic = unsafe { &*magic_ptr };
-            if proper_magic != magic {
-                return Err(())
-            }
 
             let ehdr_ptr: *mut $t = unsafe {
                 ::std::mem::transmute(bytes_ptr)
@@ -28,6 +22,17 @@ macro_rules! read_ehdr {
                 Box::from_raw(ehdr_ptr)
             };
             Ok(ehdr_box)
+        }
+
+        fn validate_elf_magic(magic: &[u8]) -> Result<(), ()> 
+        {
+            let proper_magic = &[0x7f, b'E', b'L', b'F'];
+            assert_eq!(magic.len(), proper_magic.len());
+
+            if proper_magic != magic {
+                return Err(())
+            }
+            Ok(())
         }
 
         #[allow(dead_code)]
