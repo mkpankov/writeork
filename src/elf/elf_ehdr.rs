@@ -1,6 +1,6 @@
 #[macro_export]
 macro_rules! elf_ehdr {
-    ($half:ty, $word:ty, $addr:ty, $off:ty) => {
+    () => {
         use ::std::fmt::{Display, Formatter};
         use ::to_host::to_host_copy::ToHostCopy;
         use ::to_host::to_host_in_place::ToHostInPlace;
@@ -9,28 +9,34 @@ macro_rules! elf_ehdr {
         use super::super::elf_ident_named::ElfIdentNamed;
         use super::super::elf_ehdr_type::ElfEhdrType;
         use super::super::elf_ehdr_machine::ElfEhdrMachine;
-        use super::primitive::*;
 
         #[repr(C)]
         #[derive(Debug, Clone, Copy)]
-        pub struct Elf_Ehdr {
+        pub struct Elf_Ehdr<H, W, A, O> {
             e_ident: ElfIdent,
             e_type: ElfEhdrType,
             e_machine: ElfEhdrMachine,
-            e_version: $word,
-            e_entry: $addr,
-            e_phoff: $off,
-            e_shoff: $off,
-            e_flags: $word,
-            e_ehsize: $half,
-            e_phentsize: $half,
-            e_phnum: $half,
-            e_shentsize: $half,
-            e_shnum: $half,
-            e_shstrndx: $half
+            e_version: W,
+            e_entry: A,
+            e_phoff: O,
+            e_shoff: O,
+            e_flags: W,
+            e_ehsize: H,
+            e_phentsize: H,
+            e_phnum: H,
+            e_shentsize: H,
+            e_shnum: H,
+            e_shstrndx: H
         }
 
-        impl Display for Elf_Ehdr {
+        impl<H, W, A, O> Display
+            for Elf_Ehdr<H, W, A, O>
+            where
+                H: ToHostCopy + ::std::fmt::LowerHex + ::std::fmt::Display,
+                W: ToHostCopy + ::std::fmt::LowerHex,
+                A: ToHostCopy + ::std::fmt::LowerHex,
+                O: ToHostCopy + ::std::fmt::LowerHex + ::std::fmt::Display,
+        {
             fn fmt(&self, fmt: &mut Formatter) -> ::std::fmt::Result {
                 let ehdr_ident: &ElfIdentNamed = unsafe {
                     ::std::mem::transmute(&self.e_ident)
@@ -76,9 +82,15 @@ macro_rules! elf_ehdr {
             }
         }
 
-        impl Elf_Ehdr {
+        impl<H, W, A, O> Elf_Ehdr<H, W, A, O> 
+        where
+            H: Copy,
+            W: Copy,
+            A: Copy,
+            O: Copy,
+        {
             #[allow(dead_code)]
-            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr, ()> {
+            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<H, W, A, O>, ()> {
                 let proper_magic = &[0x7f, b'E', b'L', b'F'];
                 let magic_ptr: *const [u8; 4] = unsafe {
                     ::std::mem::transmute(buffer.as_ptr())
@@ -88,27 +100,27 @@ macro_rules! elf_ehdr {
                     return Err(())
                 }
 
-                let ehdr_ptr: *const Elf_Ehdr = unsafe {
+                let ehdr_ptr: *const Elf_Ehdr<H, W, A, O> = unsafe {
                     ::std::mem::transmute(buffer.as_ptr())
                 };
-                let ehdr: &Elf_Ehdr = unsafe { &*ehdr_ptr };
+                let ehdr: &Elf_Ehdr<H, W, A, O> = unsafe { &*ehdr_ptr };
 
                 Ok(ehdr)
             }
             #[allow(dead_code)]
-            pub fn get_phentsize(&self) -> u16 {
+            pub fn get_phentsize(&self) -> H {
                 self.e_phentsize
             }
             #[allow(dead_code)]
-            pub fn get_phnum(&self) -> u16 {
+            pub fn get_phnum(&self) -> H {
                 self.e_phnum
             }
             #[allow(dead_code)]
-            pub fn get_phoff(&self) -> $off {
+            pub fn get_phoff(&self) -> O {
                 self.e_phoff
             }
             #[allow(dead_code)]
-            pub fn get_entry(&self) -> $addr {
+            pub fn get_entry(&self) -> A {
                 self.e_entry
             }
             #[allow(dead_code)]
@@ -126,40 +138,40 @@ macro_rules! elf_ehdr {
                 self.e_machine
             }
             #[allow(dead_code)]
-            pub fn get_version(&self) -> u32 {
+            pub fn get_version(&self) -> W {
                 self.e_version
             }
             #[allow(dead_code)]
-            pub fn get_shoff(&self) -> $off {
+            pub fn get_shoff(&self) -> O {
                 self.e_shoff
             }
             #[allow(dead_code)]
-            pub fn get_flags(&self) -> u32 {
+            pub fn get_flags(&self) -> W {
                 self.e_flags
             }
             #[allow(dead_code)]
-            pub fn get_ehsize(&self) -> u16 {
+            pub fn get_ehsize(&self) -> H {
                 self.e_ehsize
             }
             #[allow(dead_code)]
-            pub fn get_shentsize(&self) -> u16 {
+            pub fn get_shentsize(&self) -> H {
                 self.e_shentsize
             }
             #[allow(dead_code)]
-            pub fn get_shnum(&self) -> u16 {
+            pub fn get_shnum(&self) -> H {
                 self.e_shnum
             }
             #[allow(dead_code)]
-            pub fn get_shstrndx(&self) -> u16 {
+            pub fn get_shstrndx(&self) -> H {
                 self.e_shstrndx
             }
 
             #[allow(dead_code)]
             pub fn get_endianness(&self) -> Endianness {
-                let ehdr_ptr: *mut Elf_Ehdr = unsafe {
+                let ehdr_ptr: *mut Elf_Ehdr<H, W, A, O> = unsafe {
                     ::std::mem::transmute(self)
                 };
-                let ehdr: &mut Elf_Ehdr = unsafe { &mut *ehdr_ptr };
+                let ehdr: &mut Elf_Ehdr<H, W, A, O> = unsafe { &mut *ehdr_ptr };
                 let ehdr_ident: &ElfIdentNamed = unsafe {
                     ::std::mem::transmute(&ehdr.e_ident)
                 };
@@ -169,7 +181,13 @@ macro_rules! elf_ehdr {
         }
 
 
-        impl ToHostInPlaceStruct for Elf_Ehdr {
+        impl<H, W, A, O> ToHostInPlaceStruct for Elf_Ehdr<H, W, A, O> 
+        where
+            H: ToHostInPlace, 
+            W: ToHostInPlace,
+            A: ToHostInPlace,
+            O: ToHostInPlace,
+        {
             fn to_host_in_place(&mut self, endianness: &Endianness) {
                 let e = endianness;
                 self.e_type.to_host_in_place(e);
@@ -188,7 +206,13 @@ macro_rules! elf_ehdr {
             }
         }
 
-        impl ToHostCopyStruct for Elf_Ehdr {
+        impl<H, W, A, O> ToHostCopyStruct for Elf_Ehdr<H, W, A, O> 
+        where
+            H: ToHostCopy, 
+            W: ToHostCopy,
+            A: ToHostCopy,
+            O: ToHostCopy,
+        {
             fn to_host_copy(&self, endianness: &Endianness) -> Self {
                 let e = endianness;
                 Elf_Ehdr {
