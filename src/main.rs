@@ -14,11 +14,11 @@ use std::io::prelude::*;
 use std::fs::File;
 
 fn convert_byte_vec_to_ehdr_vec(
-    v: Vec<u8>) -> Result<Vec<Elf64_Ehdr>, ()> {
-    let ehdr_size = std::mem::size_of::<Elf64_Ehdr>();
+    v: Vec<u8>) -> Result<Vec<Elf64_Ehdr<Elf64_Word>>, ()> {
+    let ehdr_size = std::mem::size_of::<Elf64_Ehdr<Elf64_Word>>();
 
     assert_eq!(ehdr_size as usize, v.len());
-    let mut r: Vec<Elf64_Ehdr> = unsafe {
+    let mut r: Vec<Elf64_Ehdr<Elf64_Word>> = unsafe {
         std::mem::transmute(v)
     };
     unsafe {
@@ -38,7 +38,7 @@ fn convert_byte_vec_to_ehdr_vec(
 }
 
 fn convert_ehdr_vec_to_ehdr_box(
-    mut v: Vec<Elf64_Ehdr>) -> Box<Elf64_Ehdr>
+    mut v: Vec<Elf64_Ehdr<Elf64_Word>>) -> Box<Elf64_Ehdr<Elf64_Word>>
 {
     let ehdr = v.pop().unwrap();
     let r = Box::new(ehdr);
@@ -47,11 +47,11 @@ fn convert_ehdr_vec_to_ehdr_box(
 
 fn read_ehdr<R: Read + Seek>(
     reader: &mut R)
-    -> Box<Elf64_Ehdr>
+    -> Box<Elf64_Ehdr<Elf64_Word>>
 {
     use std::io::SeekFrom;
 
-    let ehdr_size = std::mem::size_of::<Elf64_Ehdr>();
+    let ehdr_size = std::mem::size_of::<Elf64_Ehdr<Elf64_Word>>();
     let ehdr_offset = 0;
 
     let mut b = Vec::<u8>::with_capacity(ehdr_size as usize);
@@ -76,7 +76,7 @@ fn convert_byte_vec_to_phdrs_vec(
 }
 
 fn read_phdrs<R: Read + Seek>(
-    ehdr: &Elf64_Ehdr, reader: &mut R)
+    ehdr: &Elf64_Ehdr<Elf64_Word>, reader: &mut R)
     -> Vec<Elf64_Phdr>
 {
     use std::io::SeekFrom;

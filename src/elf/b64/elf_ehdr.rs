@@ -10,15 +10,15 @@ use super::primitive::*;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
-pub struct Elf_Ehdr {
+pub struct Elf_Ehdr<W> {
     e_ident: ElfIdent,
     e_type: ElfEhdrType,
     e_machine: ElfEhdrMachine,
-    e_version: Elf64_Word,
+    e_version: W,
     e_entry: Elf64_Addr,
     e_phoff: Elf64_Off,
     e_shoff: Elf64_Off,
-    e_flags: Elf64_Word,
+    e_flags: W,
     e_ehsize: Elf64_Half,
     e_phentsize: Elf64_Half,
     e_phnum: Elf64_Half,
@@ -27,8 +27,8 @@ pub struct Elf_Ehdr {
     e_shstrndx: Elf64_Half
 }
 
-impl Elf_Ehdr {
-    fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr, ()> {
+impl<W> Elf_Ehdr<W> {
+    fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<W>, ()> {
         let proper_magic = &[0x7f, b'E', b'L', b'F'];
         let magic_ptr: *const [u8; 4] = unsafe {
             ::std::mem::transmute(buffer.as_ptr())
@@ -38,16 +38,16 @@ impl Elf_Ehdr {
             return Err(())
         }
 
-        let ehdr_ptr: *const Elf_Ehdr = unsafe {
+        let ehdr_ptr: *const Elf_Ehdr<W> = unsafe {
             ::std::mem::transmute(buffer.as_ptr())
         };
-        let ehdr: &Elf_Ehdr = unsafe { &*ehdr_ptr };
+        let ehdr: &Elf_Ehdr<W> = unsafe { &*ehdr_ptr };
 
         Ok(ehdr)
     }
 }
 
-impl Display for Elf_Ehdr {
+impl<W: ToHostCopy + ::std::fmt::LowerHex> Display for Elf_Ehdr<W> {
     fn fmt(&self, fmt: &mut Formatter) -> ::std::fmt::Result {
         let ehdr_ident: &ElfIdentNamed = unsafe {
             ::std::mem::transmute(&self.e_ident)
@@ -93,7 +93,7 @@ impl Display for Elf_Ehdr {
     }
 }
 
-impl Elf_Ehdr {
+impl<W: Copy> Elf_Ehdr<W> {
     pub fn get_phentsize(&self) -> u16 {
         self.e_phentsize
     }
@@ -112,13 +112,13 @@ impl Elf_Ehdr {
     pub fn get_machine(&self) -> ElfEhdrMachine {
         self.e_machine
     }
-    pub fn get_version(&self) -> u32 {
+    pub fn get_version(&self) -> W {
         self.e_version
     }
     pub fn get_shoff(&self) -> u64 {
         self.e_shoff
     }
-    pub fn get_flags(&self) -> u32 {
+    pub fn get_flags(&self) -> W {
         self.e_flags
     }
     pub fn get_ehsize(&self) -> u16 {
@@ -135,10 +135,10 @@ impl Elf_Ehdr {
     }
 
     pub fn get_endianness(&self) -> Endianness {
-        let ehdr_ptr: *mut Elf_Ehdr = unsafe {
+        let ehdr_ptr: *mut Elf_Ehdr<W> = unsafe {
             ::std::mem::transmute(self)
         };
-        let ehdr: &mut Elf_Ehdr = unsafe { &mut *ehdr_ptr };
+        let ehdr: &mut Elf_Ehdr<W> = unsafe { &mut *ehdr_ptr };
         let ehdr_ident: &ElfIdentNamed = unsafe {
             ::std::mem::transmute(&ehdr.e_ident)
         };
@@ -148,7 +148,7 @@ impl Elf_Ehdr {
 }
 
 
-impl ToHostInPlaceStruct for Elf_Ehdr {
+impl<W: ToHostInPlace> ToHostInPlaceStruct for Elf_Ehdr<W> {
     fn to_host_in_place(&mut self, endianness: &Endianness) {
         let e = endianness;
         self.e_type.to_host_in_place(e);
@@ -167,7 +167,7 @@ impl ToHostInPlaceStruct for Elf_Ehdr {
     }
 }
 
-impl ToHostCopyStruct for Elf_Ehdr {
+impl<W: ToHostCopy> ToHostCopyStruct for Elf_Ehdr<W> {
     fn to_host_copy(&self, endianness: &Endianness) -> Self {
         let e = endianness;
         Elf_Ehdr {
