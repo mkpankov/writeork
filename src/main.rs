@@ -30,7 +30,7 @@ fn work(options: clap::ArgMatches) {
         if elf_class != ElfEiClass::ELFCLASS32 {
             // Reread the header as Elf64_Ehdr
             let ehdr:
-                Box<Elf64_Ehdr<Elf64_Half, Elf64_Word, Elf64_Addr, Elf64_Off>> = 
+                Box<Elf64_Ehdr> = 
                 Elf64_Ehdr::read_ehdr(&mut f);
             print!("{}", ehdr);
         } else {
@@ -82,7 +82,7 @@ fn work(options: clap::ArgMatches) {
             }
             ElfEiClass::ELFCLASS64 => {
                 let ehdr: 
-                    Box<Elf64_Ehdr<Elf64_Half, Elf64_Word, Elf64_Addr, Elf64_Off>> = 
+                    Box<Elf64_Ehdr> = 
                     Elf64_Ehdr::read_ehdr(&mut f);
                 let phdrs = read_elf64_phdrs(&ehdr, &mut f);
 
