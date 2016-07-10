@@ -22,14 +22,16 @@ fn work(options: clap::ArgMatches) {
     // We first read Ehdr as 32-bit variant and then check 
     // if it's actually 32-bit. It works because ELF_EICLASS byte offset 
     // is always the same.
-    let ehdr = read_elf32_ehdr(&mut f);
+    let ehdr = Elf32_Ehdr::read_ehdr(&mut f);
     let elf_ident = ehdr.get_ident();
     let elf_class = elf_ident.get_class();
 
     if options.is_present("file-header") {
         if elf_class != ElfEiClass::ELFCLASS32 {
             // Reread the header as Elf64_Ehdr
-            let ehdr = read_elf64_ehdr(&mut f);
+            let ehdr:
+                Box<Elf64_Ehdr<Elf64_Half, Elf64_Word, Elf64_Addr, Elf64_Off>> = 
+                Elf64_Ehdr::read_ehdr(&mut f);
             print!("{}", ehdr);
         } else {
             print!("{}", ehdr);
@@ -79,7 +81,9 @@ fn work(options: clap::ArgMatches) {
                 }
             }
             ElfEiClass::ELFCLASS64 => {
-                let ehdr = read_elf64_ehdr(&mut f);
+                let ehdr: 
+                    Box<Elf64_Ehdr<Elf64_Half, Elf64_Word, Elf64_Addr, Elf64_Off>> = 
+                    Elf64_Ehdr::read_ehdr(&mut f);
                 let phdrs = read_elf64_phdrs(&ehdr, &mut f);
 
                 println!("Program headers:");

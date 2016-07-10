@@ -28,9 +28,6 @@ pub use ::elf::b64::elf_phdr::Elf_Phdr as Elf64_Phdr;
 
 pub mod prelude;
 
-pub use ::elf::b32::helpers::read_ehdr as read_elf32_ehdr;
-pub use ::elf::b64::helpers::read_ehdr as read_elf64_ehdr;
-
 pub use ::elf::b32::helpers::read_phdrs as read_elf32_phdrs;
 pub use ::elf::b64::helpers::read_phdrs as read_elf64_phdrs;
 
