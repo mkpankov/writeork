@@ -1,6 +1,7 @@
 #![allow(non_camel_case_types)]
 
 extern crate clap;
+extern crate num;
 
 // FIXME: Macro export from to_host is ugly. I'd like to hide to_host module.
 #[macro_use]

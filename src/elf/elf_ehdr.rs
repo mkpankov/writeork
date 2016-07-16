@@ -235,3 +235,13 @@ macro_rules! elf_ehdr {
         }
     }
 }
+
+pub trait Elf_Ehdr_T<H, O> 
+    where
+        H: ::num::PrimInt,
+        O: ::num::PrimInt,
+{
+    fn get_phentsize(&self) -> H;
+    fn get_phnum(&self) -> H;
+    fn get_phoff(&self) -> O;
+}

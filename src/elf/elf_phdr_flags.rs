@@ -1,7 +1,7 @@
 use ::std::fmt::{Display, Formatter};
 
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ElfPhdrFlags {
     flags: u32,
 }
@@ -31,3 +31,6 @@ impl Display for ElfPhdrFlags {
         write!(fmt, "{}{}{}", maybe_r, maybe_w, maybe_x)
     }
 }
+
+swap_copy_wrapper!(ElfPhdrFlags, u32);
+to_host_copy_wrapper!(ElfPhdrFlags, u32);

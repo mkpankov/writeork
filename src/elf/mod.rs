@@ -21,10 +21,10 @@ mod b32;
 mod b64;
 
 pub use ::elf::b32::elf_ehdr::Elf32_Ehdr;
-pub use ::elf::b32::elf_phdr::Elf_Phdr as Elf32_Phdr;
+pub use ::elf::b32::elf_phdr::Elf32_Phdr;
 
 pub use ::elf::b64::elf_ehdr::Elf64_Ehdr;
-pub use ::elf::b64::elf_phdr::Elf_Phdr as Elf64_Phdr;
+pub use ::elf::b64::elf_phdr::Elf64_Phdr;
 
 pub mod prelude;
 

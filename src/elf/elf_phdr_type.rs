@@ -1,7 +1,7 @@
 use ::std::fmt::{Display, Formatter};
 
 #[repr(u32)]
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub enum ElfPhdrType {
     PT_NULL = 0,
@@ -48,3 +48,6 @@ impl Display for ElfPhdrType {
         fmt.pad(s)
     }
 }
+
+swap_copy_wrapper!(ElfPhdrType, u32);
+to_host_copy_wrapper!(ElfPhdrType, u32);
