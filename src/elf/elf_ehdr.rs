@@ -90,16 +90,25 @@ macro_rules! elf_ehdr {
             O: Copy,
         {
             #[allow(dead_code)]
-            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<H, W, A, O>, ()> {
+            fn validate_magic(buffer: &[u8]) -> Result<(), ()> 
+            {
                 let proper_magic = &[0x7f, b'E', b'L', b'F'];
-                let magic_ptr: *const [u8; 4] = unsafe {
-                    ::std::mem::transmute(buffer.as_ptr())
-                };
-                let magic = unsafe { &*magic_ptr };
-                if proper_magic != magic {
+                if buffer.len() < 4 {
                     return Err(())
                 }
+                let magic = &buffer[..4];
+                if magic == proper_magic {
+                    Ok(())
+                } else {
+                    Err(())
+                }
+            }
 
+            #[allow(dead_code)]
+            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<H, W, A, O>, ()> 
+            {
+                try!(Self::validate_magic(buffer));
+                
                 let ehdr_ptr: *const Elf_Ehdr<H, W, A, O> = unsafe {
                     ::std::mem::transmute(buffer.as_ptr())
                 };
@@ -187,17 +196,10 @@ macro_rules! elf_ehdr {
                 let ehdr_size = ::std::mem::size_of::<Self>();
 
                 assert_eq!(ehdr_size as usize, v.len());
+                try!(Self::validate_magic(&v));
+
                 let bytes_ptr: *mut u8 = v.as_mut_ptr();
                 ::std::mem::forget(v);
-
-                let proper_magic = &[0x7f, b'E', b'L', b'F'];
-                let magic_ptr: *const [u8; 4] = unsafe {
-                    ::std::mem::transmute(bytes_ptr)
-                };
-                let magic = unsafe { &*magic_ptr };
-                if proper_magic != magic {
-                    return Err(())
-                }
 
                 let ehdr_ptr: *mut Self = unsafe {
                     ::std::mem::transmute(bytes_ptr)
