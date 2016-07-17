@@ -252,11 +252,11 @@ macro_rules! elf_ehdr {
         }
 
         impl<H, W, A, O> ToHostCopyStruct for Elf_Ehdr<H, W, A, O> 
-        where
-            H: ToHostCopy, 
-            W: ToHostCopy,
-            A: ToHostCopy,
-            O: ToHostCopy,
+            where
+                H: ToHostCopy, 
+                W: ToHostCopy,
+                A: ToHostCopy,
+                O: ToHostCopy,
         {
             fn to_host_copy(&self, endianness: &Endianness) -> Self {
                 let e = endianness;
@@ -277,6 +277,27 @@ macro_rules! elf_ehdr {
                     e_shstrndx: self.e_shstrndx.to_host_copy(e),
                 }
             }
+        }
+
+        impl<H, W, A, O> Elf_Ehdr_T<H, O> for Elf_Ehdr<H, W, A, O>
+            where
+                H: ::num::PrimInt,
+                O: ::num::PrimInt,
+        {
+            fn get_phentsize(&self) -> H
+            {
+                self.e_phentsize
+            }
+
+            fn get_phnum(&self) -> H
+            {
+                self.e_phnum
+            }
+            
+            fn get_phoff(&self) -> O 
+            {
+                self.e_phoff
+            }    
         }
     }
 }

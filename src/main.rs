@@ -61,7 +61,7 @@ fn work(options: clap::ArgMatches) {
             // FIXME: This fugly code is due to ehdr and phdrs being of 
             // different type in different branches of control flow
             ElfEiClass::ELFCLASS32 => {
-                let phdrs = read_elf32_phdrs(&ehdr, &mut f);
+                let phdrs = Elf32_Phdr::read_phdrs(&ehdr, &mut f);
 
                 println!("Program headers:");
                 println!(
@@ -85,7 +85,7 @@ fn work(options: clap::ArgMatches) {
                 let ehdr: 
                     Box<Elf64_Ehdr> = 
                     Elf64_Ehdr::read_ehdr(&mut f);
-                let phdrs = read_elf64_phdrs(&ehdr, &mut f);
+                let phdrs = Elf64_Phdr::read_phdrs(&*ehdr, &mut f);
 
                 println!("Program headers:");
                 println!(

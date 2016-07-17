@@ -1,5 +1,7 @@
 use ::std::io::{Read, Seek};
+
 use super::primitive::*;
+use super::super::elf_ehdr::Elf_Ehdr_T;
 
 elf_ehdr!();
 

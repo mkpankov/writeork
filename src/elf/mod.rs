@@ -14,8 +14,6 @@ pub mod elf_phdr_flags;
 mod elf_ehdr;
 #[macro_use]
 mod elf_phdr;
-#[macro_use]
-mod helpers;
 
 mod b32;
 mod b64;
@@ -27,9 +25,6 @@ pub use ::elf::b64::elf_ehdr::Elf64_Ehdr;
 pub use ::elf::b64::elf_phdr::Elf64_Phdr;
 
 pub mod prelude;
-
-pub use ::elf::b32::helpers::read_phdrs as read_elf32_phdrs;
-pub use ::elf::b64::helpers::read_phdrs as read_elf64_phdrs;
 
 fn _static_asserts() {
     let ei_bytes: elf_ident::ElfIdent = unsafe {
