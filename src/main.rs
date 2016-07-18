@@ -20,8 +20,8 @@ fn work(options: clap::ArgMatches) {
     let mut f = File::open(path).unwrap();
 
     // FIXME: This is lazy guessing of bitness.
-    // We first read Ehdr as 32-bit variant and then check 
-    // if it's actually 32-bit. It works because ELF_EICLASS byte offset 
+    // We first read Ehdr as 32-bit variant and then check
+    // if it's actually 32-bit. It works because ELF_EICLASS byte offset
     // is always the same.
     let ehdr = Elf32_Ehdr::read_ehdr(&mut f);
     let elf_ident = ehdr.get_ident();
@@ -31,7 +31,7 @@ fn work(options: clap::ArgMatches) {
         if elf_class != ElfEiClass::ELFCLASS32 {
             // Reread the header as Elf64_Ehdr
             let ehdr:
-                Box<Elf64_Ehdr> = 
+                Box<Elf64_Ehdr> =
                 Elf64_Ehdr::read_ehdr(&mut f);
             print!("{}", ehdr);
         } else {
@@ -58,7 +58,7 @@ fn work(options: clap::ArgMatches) {
         println!("");
 
         match elf_class {
-            // FIXME: This fugly code is due to ehdr and phdrs being of 
+            // FIXME: This fugly code is due to ehdr and phdrs being of
             // different type in different branches of control flow
             ElfEiClass::ELFCLASS32 => {
                 let phdrs = Elf32_Phdr::read_phdrs(&ehdr, &mut f);
@@ -82,8 +82,8 @@ fn work(options: clap::ArgMatches) {
                 }
             }
             ElfEiClass::ELFCLASS64 => {
-                let ehdr: 
-                    Box<Elf64_Ehdr> = 
+                let ehdr:
+                    Box<Elf64_Ehdr> =
                     Elf64_Ehdr::read_ehdr(&mut f);
                 let phdrs = Elf64_Phdr::read_phdrs(&*ehdr, &mut f);
 

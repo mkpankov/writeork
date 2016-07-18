@@ -30,6 +30,6 @@ impl ElfEiData {
             ELFDATA2MSB => BE,
             ELFDATA2LSB => LE,
             ELFDATANONE => panic!("Unknown data format"),
-        } 
+        }
     }
 }

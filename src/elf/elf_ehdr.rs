@@ -82,7 +82,7 @@ macro_rules! elf_ehdr {
             }
         }
 
-        impl<H, W, A, O> Elf_Ehdr<H, W, A, O> 
+        impl<H, W, A, O> Elf_Ehdr<H, W, A, O>
         where
             H: Copy,
             W: Copy,
@@ -90,7 +90,7 @@ macro_rules! elf_ehdr {
             O: Copy,
         {
             #[allow(dead_code)]
-            fn validate_magic(buffer: &[u8]) -> Result<(), ()> 
+            fn validate_magic(buffer: &[u8]) -> Result<(), ()>
             {
                 let proper_magic = &[0x7f, b'E', b'L', b'F'];
                 if buffer.len() < 4 {
@@ -105,10 +105,10 @@ macro_rules! elf_ehdr {
             }
 
             #[allow(dead_code)]
-            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<H, W, A, O>, ()> 
+            fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<H, W, A, O>, ()>
             {
                 try!(Self::validate_magic(buffer));
-                
+
                 let ehdr_ptr: *const Elf_Ehdr<H, W, A, O> = unsafe {
                     ::std::mem::transmute(buffer.as_ptr())
                 };
@@ -134,7 +134,7 @@ macro_rules! elf_ehdr {
             }
             #[allow(dead_code)]
             pub fn get_ident(&self) -> ElfIdentNamed {
-                unsafe { 
+                unsafe {
                     ::std::mem::transmute(self.e_ident)
                 }
             }
@@ -228,9 +228,9 @@ macro_rules! elf_ehdr {
             }
         }
 
-        impl<H, W, A, O> ToHostInPlaceStruct for Elf_Ehdr<H, W, A, O> 
+        impl<H, W, A, O> ToHostInPlaceStruct for Elf_Ehdr<H, W, A, O>
         where
-            H: ToHostInPlace, 
+            H: ToHostInPlace,
             W: ToHostInPlace,
             A: ToHostInPlace,
             O: ToHostInPlace,
@@ -253,9 +253,9 @@ macro_rules! elf_ehdr {
             }
         }
 
-        impl<H, W, A, O> ToHostCopyStruct for Elf_Ehdr<H, W, A, O> 
+        impl<H, W, A, O> ToHostCopyStruct for Elf_Ehdr<H, W, A, O>
             where
-                H: ToHostCopy, 
+                H: ToHostCopy,
                 W: ToHostCopy,
                 A: ToHostCopy,
                 O: ToHostCopy,
@@ -295,16 +295,16 @@ macro_rules! elf_ehdr {
             {
                 self.e_phnum
             }
-            
-            fn get_phoff(&self) -> O 
+
+            fn get_phoff(&self) -> O
             {
                 self.e_phoff
-            }    
+            }
         }
     }
 }
 
-pub trait Elf_Ehdr_T<H, O> 
+pub trait Elf_Ehdr_T<H, O>
     where
         H: ::num::PrimInt,
         O: ::num::PrimInt,

@@ -26,7 +26,7 @@ macro_rules! elf_phdr {
             where
                 X: ToHostCopy + ::std::fmt::LowerHex,
                 A: ToHostCopy + ::std::fmt::LowerHex,
-                O: ToHostCopy + ::std::fmt::LowerHex, 
+                O: ToHostCopy + ::std::fmt::LowerHex,
         {
             #[allow(dead_code)]
             pub fn print_with_endianness(&self, e: &Endianness) {
@@ -76,7 +76,7 @@ macro_rules! elf_phdr {
             where
                 X: ToHostCopy,
                 A: ToHostCopy,
-                O: ToHostCopy, 
+                O: ToHostCopy,
         {
             fn to_host_copy(&self, endianness: &Endianness) -> Self {
                 let e = endianness;
@@ -97,7 +97,7 @@ macro_rules! elf_phdr {
         impl<H, X, A, O> Elf_Phdr<H, X, A, O> {
             #[allow(dead_code)]
             fn convert_byte_vec_to_phdrs_vec(
-                v: Vec<u8>, phdr_num: u16, phdr_size: u16) 
+                v: Vec<u8>, phdr_num: u16, phdr_size: u16)
                 -> Vec<Self> {
                 assert_eq!(phdr_num as usize * phdr_size as usize, v.len());
                 let mut r: Vec<Self> = unsafe {
