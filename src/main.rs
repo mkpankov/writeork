@@ -19,6 +19,8 @@ fn work(options: clap::ArgMatches) {
 
     let mut f = File::open(path).unwrap();
 
+    let class = read_class(&mut f);
+
     // FIXME: This is lazy guessing of bitness.
     // We first read Ehdr as 32-bit variant and then check
     // if it's actually 32-bit. It works because ELF_EICLASS byte offset

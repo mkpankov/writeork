@@ -1,3 +1,6 @@
+use ::std::io::{Read, Seek};
+use super::elf_ei_class::ElfEiClass;
+
 #[macro_export]
 macro_rules! elf_ehdr {
     () => {
@@ -9,6 +12,7 @@ macro_rules! elf_ehdr {
         use super::super::elf_ident_named::ElfIdentNamed;
         use super::super::elf_ehdr_type::ElfEhdrType;
         use super::super::elf_ehdr_machine::ElfEhdrMachine;
+        use super::super::elf_ehdr::validate_magic;
 
         #[repr(C)]
         #[derive(Debug, Clone, Copy)]
@@ -90,24 +94,9 @@ macro_rules! elf_ehdr {
             O: Copy,
         {
             #[allow(dead_code)]
-            fn validate_magic(buffer: &[u8]) -> Result<(), ()>
-            {
-                let proper_magic = &[0x7f, b'E', b'L', b'F'];
-                if buffer.len() < 4 {
-                    return Err(())
-                }
-                let magic = &buffer[..4];
-                if magic == proper_magic {
-                    Ok(())
-                } else {
-                    Err(())
-                }
-            }
-
-            #[allow(dead_code)]
             fn from_slice(buffer: &[u8]) -> Result<&Elf_Ehdr<H, W, A, O>, ()>
             {
-                try!(Self::validate_magic(buffer));
+                try!(validate_magic(buffer));
 
                 let ehdr_ptr: *const Elf_Ehdr<H, W, A, O> = unsafe {
                     ::std::mem::transmute(buffer.as_ptr())
@@ -196,7 +185,7 @@ macro_rules! elf_ehdr {
                 let ehdr_size = ::std::mem::size_of::<Self>();
 
                 assert_eq!(ehdr_size as usize, v.len());
-                try!(Self::validate_magic(&v));
+                try!(validate_magic(&v));
 
                 let bytes_ptr: *mut u8 = v.as_mut_ptr();
                 ::std::mem::forget(v);
@@ -312,4 +301,44 @@ pub trait Elf_Ehdr_T<H, O>
     fn get_phentsize(&self) -> H;
     fn get_phnum(&self) -> H;
     fn get_phoff(&self) -> O;
+}
+
+#[allow(dead_code)]
+pub fn read_class<R: Read + Seek>(
+    reader: &mut R)
+    -> Result<ElfEiClass, ()>
+{
+    use std::io::SeekFrom;
+    use super::elf_ident_named::{
+        EI_MAGIC_SIZE, EI_MAGIC_OFFSET, EI_CLASS_SIZE, EI_CLASS_OFFSET};
+
+    let magic_class_size = EI_MAGIC_SIZE + EI_CLASS_SIZE;
+    let ehdr_offset = EI_MAGIC_OFFSET;
+
+    let mut b = Vec::<u8>::with_capacity(magic_class_size as usize);
+    reader.seek(SeekFrom::Start(ehdr_offset as u64)).unwrap();
+    reader.take(magic_class_size as u64).read_to_end(&mut b).unwrap();
+
+    try!(validate_magic(&b));
+    
+    ElfEiClass::from_u8(b[EI_CLASS_OFFSET])
+}
+
+#[allow(dead_code)]
+pub fn validate_magic(buffer: &[u8]) -> Result<(), ()>
+{
+    use super::elf_ident_named::EI_MAGIC_SIZE;
+    let proper_magic = &[0x7f, b'E', b'L', b'F'];
+
+    assert_eq!(proper_magic.len(), EI_MAGIC_SIZE);
+
+    if buffer.len() < 4 {
+        return Err(())
+    }
+    let magic = &buffer[..4];
+    if magic == proper_magic {
+        Ok(())
+    } else {
+        Err(())
+    }
 }

@@ -2,10 +2,16 @@ use ::std::fmt::{Display, Formatter};
 
 use super::prelude::{ElfEiClass, ElfEiData, ElfEiVersion, ElfEiOsAbi, ElfEiAbiVersion};
 
+pub const EI_MAGIC_SIZE: usize = 4;
+pub const EI_MAGIC_OFFSET: usize = 0;
+
+pub const EI_CLASS_SIZE: usize = 1;
+pub const EI_CLASS_OFFSET: usize = EI_MAGIC_OFFSET + EI_MAGIC_SIZE;
+
 #[repr(C)]
 #[derive(Debug)]
 pub struct ElfIdentNamed {
-    ei_magic: [u8; 4],
+    ei_magic: [u8; EI_MAGIC_SIZE],
     ei_class: ElfEiClass,
     ei_data: ElfEiData,
     ei_version: ElfEiVersion,
