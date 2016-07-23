@@ -8,7 +8,10 @@ extern crate num;
 mod to_host;
 
 mod elf;
+
 use elf::prelude::*;
+
+use to_host::ToHostCopyStruct;
 
 use clap::App;
 
@@ -19,50 +22,51 @@ fn work(options: clap::ArgMatches) {
 
     let mut f = File::open(path).unwrap();
 
-    let class = read_class(&mut f);
-
-    // FIXME: This is lazy guessing of bitness.
-    // We first read Ehdr as 32-bit variant and then check
-    // if it's actually 32-bit. It works because ELF_EICLASS byte offset
-    // is always the same.
-    let ehdr = Elf32_Ehdr::read_ehdr(&mut f);
-    let elf_ident = ehdr.get_ident();
-    let elf_class = elf_ident.get_class();
+    let elf_class = read_class(&mut f).unwrap();
 
     if options.is_present("file-header") {
-        if elf_class != ElfEiClass::ELFCLASS32 {
-            // Reread the header as Elf64_Ehdr
-            let ehdr:
-                Box<Elf64_Ehdr> =
-                Elf64_Ehdr::read_ehdr(&mut f);
-            print!("{}", ehdr);
-        } else {
-            print!("{}", ehdr);
+        match elf_class {
+            ElfEiClass::ELFCLASS32 => {
+                let ehdr:
+                    Box<Elf32_Ehdr> =
+                    Elf32_Ehdr::read_ehdr(&mut f);
+                let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
+
+                print!("{}", ehdr);
+            }
+            ElfEiClass::ELFCLASS64 => {
+                let ehdr:
+                    Box<Elf64_Ehdr> =
+                    Elf64_Ehdr::read_ehdr(&mut f);
+                let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
+
+                print!("{}", ehdr);
+            }
+            _ => println!("This ELF file has ELFCLASSNONE. We can't get its bitness")
         }
     }
 
     if options.is_present("program-headers")
     || options.is_present("segments") {
-        use to_host::ToHostCopyStruct;
-
-        let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
-        let e = ehdr.get_endianness();
-        let e_type: ElfEhdrType = unsafe {
-            std::mem::transmute(ehdr.get_type())
-        };
-
-        println!("");
-        println!("Elf file type is {}", e_type);
-        println!("Entry point {:#x}", ehdr.get_entry());
-        println!(
-            "There are {} program headers, starting at offset {}",
-            ehdr.get_phnum(), ehdr.get_phoff());
-        println!("");
-
         match elf_class {
-            // FIXME: This fugly code is due to ehdr and phdrs being of
-            // different type in different branches of control flow
             ElfEiClass::ELFCLASS32 => {
+                let ehdr:
+                    Box<Elf32_Ehdr> =
+                    Elf32_Ehdr::read_ehdr(&mut f);        
+                let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
+                let e = ehdr.get_endianness();
+                let e_type: ElfEhdrType = unsafe {
+                    std::mem::transmute(ehdr.get_type())
+                };
+
+                println!("");
+                println!("Elf file type is {}", e_type);
+                println!("Entry point {:#x}", ehdr.get_entry());
+                println!(
+                    "There are {} program headers, starting at offset {}",
+                    ehdr.get_phnum(), ehdr.get_phoff());
+                println!("");
+
                 let phdrs = Elf32_Phdr::read_phdrs(&ehdr, &mut f);
 
                 println!("Program headers:");
@@ -86,8 +90,22 @@ fn work(options: clap::ArgMatches) {
             ElfEiClass::ELFCLASS64 => {
                 let ehdr:
                     Box<Elf64_Ehdr> =
-                    Elf64_Ehdr::read_ehdr(&mut f);
-                let phdrs = Elf64_Phdr::read_phdrs(&*ehdr, &mut f);
+                    Elf64_Ehdr::read_ehdr(&mut f);        
+                let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
+                let e = ehdr.get_endianness();
+                let e_type: ElfEhdrType = unsafe {
+                    std::mem::transmute(ehdr.get_type())
+                };
+
+                println!("");
+                println!("Elf file type is {}", e_type);
+                println!("Entry point {:#x}", ehdr.get_entry());
+                println!(
+                    "There are {} program headers, starting at offset {}",
+                    ehdr.get_phnum(), ehdr.get_phoff());
+                println!("");
+
+                let phdrs = Elf64_Phdr::read_phdrs(&ehdr, &mut f);
 
                 println!("Program headers:");
                 println!(
