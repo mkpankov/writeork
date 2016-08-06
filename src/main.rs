@@ -25,25 +25,28 @@ fn work(options: clap::ArgMatches) {
     let elf_class = read_class(&mut f).unwrap();
 
     if options.is_present("file-header") {
+        let ehdr_outer: Box<Elf_Ehdr_TD>;
+
         match elf_class {
             ElfEiClass::ELFCLASS32 => {
                 let ehdr:
                     Box<Elf32_Ehdr> =
                     Elf32_Ehdr::read_ehdr(&mut f);
-                let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
-
-                print!("{}", ehdr);
+                let ehdr = Box::new(ehdr.to_host_copy(&ehdr.get_endianness()));
+                ehdr_outer = ehdr as Box<Elf_Ehdr_TD>;
             }
             ElfEiClass::ELFCLASS64 => {
                 let ehdr:
                     Box<Elf64_Ehdr> =
                     Elf64_Ehdr::read_ehdr(&mut f);
-                let ehdr = ehdr.to_host_copy(&ehdr.get_endianness());
-
-                print!("{}", ehdr);
+                let ehdr = Box::new(ehdr.to_host_copy(&ehdr.get_endianness()));
+                ehdr_outer = ehdr as Box<Elf_Ehdr_TD>;
             }
-            _ => println!("This ELF file has ELFCLASSNONE. We can't get its bitness")
+            ElfEiClass::ELFCLASSNONE => 
+                panic!("This ELF file has ELFCLASSNONE. We can't get its bitness")
         }
+
+        print!("{}", ehdr_outer);
     }
 
     if options.is_present("program-headers")

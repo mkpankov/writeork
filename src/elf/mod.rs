@@ -15,7 +15,7 @@ mod elf_ehdr;
 #[macro_use]
 mod elf_phdr;
 
-mod b32;
+pub mod b32;
 mod b64;
 
 pub use ::elf::b32::elf_ehdr::Elf32_Ehdr;

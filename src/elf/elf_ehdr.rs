@@ -1,5 +1,6 @@
 use ::std::io::{Read, Seek};
 use super::elf_ei_class::ElfEiClass;
+use super::super::to_host::ToHostCopyStruct;
 
 #[macro_export]
 macro_rules! elf_ehdr {
@@ -272,8 +273,12 @@ macro_rules! elf_ehdr {
 
         impl<H, W, A, O> Elf_Ehdr_T<H, O> for Elf_Ehdr<H, W, A, O>
             where
-                H: ::num::PrimInt,
-                O: ::num::PrimInt,
+                H: ::num::PrimInt + ToHostCopy
+                 + ::std::fmt::LowerHex + ::std::fmt::Display,
+                O: ::num::PrimInt + ToHostCopy
+                 + ::std::fmt::LowerHex + ::std::fmt::Display,
+                W: ToHostCopy + ::std::fmt::LowerHex,
+                A: ToHostCopy + ::std::fmt::LowerHex,
         {
             fn get_phentsize(&self) -> H
             {
@@ -290,10 +295,22 @@ macro_rules! elf_ehdr {
                 self.e_phoff
             }
         }
+
+        impl<H, W, A, O> Elf_Ehdr_TD for Elf_Ehdr<H, W, A, O>
+            where
+                H: ::num::PrimInt + ToHostCopy
+                 + ::std::fmt::LowerHex + ::std::fmt::Display,
+                O: ::num::PrimInt + ToHostCopy
+                 + ::std::fmt::LowerHex + ::std::fmt::Display,
+                W: ToHostCopy + ::std::fmt::LowerHex,
+                A: ToHostCopy + ::std::fmt::LowerHex,
+        {
+
+        }
     }
 }
 
-pub trait Elf_Ehdr_T<H, O>
+pub trait Elf_Ehdr_T<H, O> : ToHostCopyStruct + ::std::fmt::Display
     where
         H: ::num::PrimInt,
         O: ::num::PrimInt,
@@ -301,6 +318,11 @@ pub trait Elf_Ehdr_T<H, O>
     fn get_phentsize(&self) -> H;
     fn get_phnum(&self) -> H;
     fn get_phoff(&self) -> O;
+}
+
+pub trait Elf_Ehdr_TD : ToHostCopyStruct + ::std::fmt::Display
+{
+    
 }
 
 #[allow(dead_code)]

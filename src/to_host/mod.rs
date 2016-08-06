@@ -19,5 +19,6 @@ pub trait ToHostInPlaceStruct {
 }
 
 pub trait ToHostCopyStruct {
-    fn to_host_copy(&self, endianness: &Endianness) -> Self;
+    fn to_host_copy(&self, endianness: &Endianness) -> Self
+        where Self: Sized;
 }
